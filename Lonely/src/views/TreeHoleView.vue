@@ -27,14 +27,12 @@
         ></textarea>
         <div class="text-count text-sm text-gray">{{ content.text.length }}/200</div>
         
-        <!-- 语音录制按钮 -->
-        <div class="voice-record">
-          <button class="media-btn" @click="recordVoice">
-            <AudioOutlined style="font-size: 24px;" />
-            <span>{{ content.voice ? '已录制' : '录制语音' }}</span>
-          </button>
-          <p class="text-sm text-gray">最长 60 秒</p>
+        <!-- 多媒体按钮 -->
+        <div class="media-buttons">
+          <VoiceUpload v-model="content.voice" />
+          <ImageUpload v-model="content.image" />
         </div>
+        <p class="text-sm text-gray">语音最长 60 秒</p>
         
         <!-- 发出树洞按钮 -->
         <div class="send-container">
@@ -69,21 +67,25 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { LeftOutlined, AudioOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import { LeftOutlined } from '@ant-design/icons-vue'
 import request from '../utils/http'
+import ImageUpload from '../components/ImageUpload.vue'
+import VoiceUpload from '../components/VoiceUpload.vue'
 
 const router = useRouter()
 
 const content = ref({
   text: '',
-  voice: ''
+  voice: '',
+  image: ''
 })
 
 const showTreeHoleAnimation = ref(false)
 const showForm = ref(false)
 
 const goBack = () => {
-  router.back()
+  router.push('/main')
 }
 
 const toggleForm = () => {
@@ -92,7 +94,8 @@ const toggleForm = () => {
     // 重置表单
     content.value = {
       text: '',
-      voice: ''
+      voice: '',
+      image: ''
     }
   }
 }
@@ -101,16 +104,10 @@ const goToMessages = () => {
   router.push('/treehole-receive')
 }
 
-const recordVoice = () => {
-  // 模拟语音录制
-  content.value.voice = 'voice_' + Date.now()
-  alert('语音录制功能已模拟')
-}
-
 const sendTreeHole = async () => {
   // 校验至少有一种内容
-  if (!content.value.text && !content.value.voice) {
-    alert('请至少填写一种内容')
+  if (!content.value.text && !content.value.voice && !content.value.image) {
+    message.error('请至少填写一种内容')
     return
   }
   
@@ -121,17 +118,19 @@ const sendTreeHole = async () => {
     // 调用后端API发送树洞
     const response = await request.post('/TreeHole/Post', {
       Content: content.value.text,
-      VoiceUrl: content.value.voice
+      VoiceUrl: content.value.voice,
+      ImageUrl: content.value.image
     })
     
     if (response.success) {
       // 显示成功消息
       setTimeout(() => {
-        alert('树洞已发出，将推送给3~5个随机用户')
+        message.success('树洞已发出，将推送给3~5个随机用户')
         // 重置表单
         content.value = {
           text: '',
-          voice: ''
+          voice: '',
+          image: ''
         }
         // 隐藏动画
         showTreeHoleAnimation.value = false
@@ -139,12 +138,12 @@ const sendTreeHole = async () => {
         showForm.value = false
       }, 1000)
     } else {
-      alert('发送树洞失败，请重试')
+      message.error('发送树洞失败，请重试')
       showTreeHoleAnimation.value = false
     }
   } catch (error) {
     console.error('发送树洞失败:', error)
-    alert('发送树洞失败，请检查网络连接')
+    message.error('发送树洞失败，请检查网络连接')
     showTreeHoleAnimation.value = false
   }
 }
@@ -232,30 +231,33 @@ const sendTreeHole = async () => {
   margin-bottom: 24px;
 }
 
-.voice-record {
-  margin-bottom: 32px;
+.media-buttons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .media-btn {
+  flex: 1;
   background-color: #f0f0f0;
   border: none;
   border-radius: 8px;
   padding: 16px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  width: 100%;
 }
 
 .media-btn:hover {
   background-color: #e0e0e0;
 }
 
-.voice-record p {
+.media-buttons + p {
   margin-top: 8px;
-  margin-left: 44px;
+  margin-bottom: 32px;
 }
 
 .send-container {

@@ -38,9 +38,16 @@ public class MatchController : ControllerBase
     [HttpPost("Start")]
     public async Task<ActionResult<ApiResponse<object>>> StartMatching()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _matchService.StartMatching(userId);
-        return Ok(response);
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _matchService.StartMatching(userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, "开始匹配失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -55,9 +62,16 @@ public class MatchController : ControllerBase
     [HttpGet("Status")]
     public async Task<ActionResult<ApiResponse<object>>> GetMatchStatus()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _matchService.GetMatchStatus(userId);
-        return Ok(response);
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _matchService.GetMatchStatus(userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, "获取匹配状态失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -72,9 +86,16 @@ public class MatchController : ControllerBase
     [HttpPost("Cancel")]
     public async Task<ActionResult<ApiResponse>> CancelMatching()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _matchService.CancelMatching(userId);
-        return Ok(response);
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _matchService.CancelMatching(userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, "取消匹配失败: " + ex.Message));
+        }
     }
     
     /// <summary>
@@ -90,8 +111,20 @@ public class MatchController : ControllerBase
     [HttpPost("End/{id}")]
     public async Task<ActionResult<ApiResponse>> EndMatch(int id)
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _matchService.EndMatch(id, userId);
-        return Ok(response);
+        if (id <= 0)
+        {
+            return BadRequest(new ApiResponse(false, "匹配ID无效"));
+        }
+        
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _matchService.EndMatch(id, userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, "结束匹配失败: " + ex.Message));
+        }
     }
 }

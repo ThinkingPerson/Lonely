@@ -57,6 +57,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 import { LeftOutlined } from '@ant-design/icons-vue'
 
 const router = useRouter()
@@ -81,19 +82,19 @@ onMounted(() => {
 })
 
 const goBack = () => {
-  router.back()
+  router.push('/main')
 }
 
 const showPrivacy = () => {
-  alert('隐私说明：\n1. 匿名机制：所有内容均匿名发布\n2. 数据不保存：聊天记录不存储到服务器\n3. 最小化存储：仅存储必要信息用于风控\n4. 隐私优先：不采集真实身份信息')
+  message.info('隐私说明：\n1. 匿名机制：所有内容均匿名发布\n2. 数据不保存：聊天记录不存储到服务器\n3. 最小化存储：仅存储必要信息用于风控\n4. 隐私优先：不采集真实身份信息')
 }
 
 const showReport = () => {
-  alert('举报功能已模拟，您可以举报违规内容')
+  message.info('举报功能已模拟，您可以举报违规内容')
 }
 
 const showAbout = () => {
-  alert('关于我们：\nLonely - 匿名·轻量·低压力的社交App\n致力于为用户提供一个安全、自由的社交空间')
+  message.info('关于我们：\nLonely - 匿名·轻量·低压力的社交App\n致力于为用户提供一个安全、自由的社交空间')
 }
 
 const logout = () => {

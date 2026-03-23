@@ -39,9 +39,36 @@ public class ReportController : ControllerBase
     [HttpPost("Submit")]
     public async Task<ActionResult<ApiResponse<object>>> SubmitReport([FromBody] ReportRequest request)
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _reportService.SubmitReport(userId, request);
-        return Ok(response);
+        if (request == null)
+        {
+            return BadRequest(new ApiResponse<object>(false, "请求参数为空", null));
+        }
+
+        if (request.ReportedUserId <= 0)
+        {
+            return BadRequest(new ApiResponse<object>(false, "被举报用户ID无效", null));
+        }
+
+        if (string.IsNullOrEmpty(request.ReportType))
+        {
+            return BadRequest(new ApiResponse<object>(false, "举报类型不能为空", null));
+        }
+
+        if (string.IsNullOrEmpty(request.Content))
+        {
+            return BadRequest(new ApiResponse<object>(false, "举报内容不能为空", null));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _reportService.SubmitReport(userId, request);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, "提交举报失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -56,8 +83,15 @@ public class ReportController : ControllerBase
     [HttpGet("My")]
     public async Task<ActionResult<ApiResponse<List<object>>>> GetMyReports()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _reportService.GetMyReports(userId);
-        return Ok(response);
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _reportService.GetMyReports(userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<List<object>>(false, "获取举报列表失败: " + ex.Message, null));
+        }
     }
 }

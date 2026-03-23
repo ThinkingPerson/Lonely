@@ -84,6 +84,34 @@ const routes = [
     meta: {
       title: '免责声明 - 法律责任说明'
     }
+  },
+  {
+    path: '/profile',
+    component: () => import('../views/ProfileView.vue'),
+    meta: {
+      title: '个人中心 - 个人信息管理'
+    }
+  },
+  {
+    path: '/feed',
+    component: () => import('../views/FeedView.vue'),
+    meta: {
+      title: '动态广场 - 查看和发布动态'
+    }
+  },
+  {
+    path: '/post',
+    component: () => import('../views/PostView.vue'),
+    meta: {
+      title: '发布动态 - 分享你的心情'
+    }
+  },
+  {
+    path: '/user/:id',
+    component: () => import('../views/UserProfileView.vue'),
+    meta: {
+      title: '用户信息 - 查看用户详情'
+    }
   }
 ]
 

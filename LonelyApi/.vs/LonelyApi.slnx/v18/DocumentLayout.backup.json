@@ -3,28 +3,16 @@
   "WorkspaceRootPath": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|d:\\lizhihang\\traeproject\\lonely\\lonelyapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|d:\\lizhihang\\traeproject\\lonely\\lonelyapi\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|solutionrelative:services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|d:\\lizhihang\\traeproject\\lonely\\lonelyapi\\services\\bottleservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|solutionrelative:services\\bottleservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|d:\\lizhihang\\traeproject\\lonely\\lonelyapi\\controllers\\postcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|solutionrelative:controllers\\postcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|d:\\lizhihang\\traeproject\\lonely\\lonelyapi\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|solutionrelative:models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|d:\\lizhihang\\traeproject\\lonely\\lonelyapi\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|solutionrelative:services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|d:\\lizhihang\\traeproject\\lonely\\lonelyapi\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|solutionrelative:controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|d:\\lizhihang\\traeproject\\lonely\\lonelyapi\\services\\matchservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|solutionrelative:services\\matchservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|d:\\lizhihang\\traeproject\\lonely\\lonelyapi\\services\\postservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{737BA8CE-3A37-CA56-BA61-E16956538C62}|LonelyApi.csproj|solutionrelative:services\\postservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -34,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 9,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -49,80 +37,42 @@
               "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
-            },
-            {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "AuthController.cs",
-              "DocumentMoniker": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Controllers\\AuthController.cs",
-              "RelativeDocumentMoniker": "Controllers\\AuthController.cs",
-              "ToolTip": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Controllers\\AuthController.cs",
-              "RelativeToolTip": "Controllers\\AuthController.cs",
-              "ViewState": "AgIAADMAAAAAAAAAAAAiwAAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "UserService.cs",
+              "DocumentMoniker": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\UserService.cs",
+              "RelativeDocumentMoniker": "Services\\UserService.cs",
+              "ToolTip": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\UserService.cs",
+              "RelativeToolTip": "Services\\UserService.cs",
+              "ViewState": "AgIAAFAAAAAAAAAAAAAowGMAAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T08:20:03.453Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "MatchService.cs",
-              "DocumentMoniker": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\MatchService.cs",
-              "RelativeDocumentMoniker": "Services\\MatchService.cs",
-              "ToolTip": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\MatchService.cs",
-              "RelativeToolTip": "Services\\MatchService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T08:10:55.198Z"
+              "WhenOpened": "2026-03-21T06:32:08.507Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "BottleService.cs",
-              "DocumentMoniker": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\BottleService.cs",
-              "RelativeDocumentMoniker": "Services\\BottleService.cs",
-              "ToolTip": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\BottleService.cs",
-              "RelativeToolTip": "Services\\BottleService.cs",
-              "ViewState": "AgIAAB4AAAAAAAAAAAAiwBQAAAAXAAAAAAAAAA==",
+              "Title": "PostController.cs",
+              "DocumentMoniker": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Controllers\\PostController.cs",
+              "RelativeDocumentMoniker": "Controllers\\PostController.cs",
+              "ToolTip": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Controllers\\PostController.cs",
+              "RelativeToolTip": "Controllers\\PostController.cs",
+              "ViewState": "AgIAAJ4AAAAAAAAAAADwv7oAAABEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T08:10:34.205Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "AuthService.cs",
-              "DocumentMoniker": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\AuthService.cs",
-              "RelativeDocumentMoniker": "Services\\AuthService.cs",
-              "ToolTip": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\AuthService.cs",
-              "RelativeToolTip": "Services\\AuthService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAZAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T08:09:39.245Z"
+              "WhenOpened": "2026-03-21T06:21:49.203Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "User.cs",
-              "DocumentMoniker": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Models\\User.cs",
-              "RelativeDocumentMoniker": "Models\\User.cs",
-              "ToolTip": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Models\\User.cs",
-              "RelativeToolTip": "Models\\User.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAEAAAAAAAAAA==",
+              "Title": "PostService.cs",
+              "DocumentMoniker": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\PostService.cs",
+              "RelativeDocumentMoniker": "Services\\PostService.cs",
+              "ToolTip": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Services\\PostService.cs",
+              "RelativeToolTip": "Services\\PostService.cs",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAiwCEAAABAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T08:07:18.743Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "D:\\lizhihang\\TraeProject\\Lonely\\LonelyApi\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAKcAAAAVAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T08:05:20.934Z",
+              "WhenOpened": "2026-03-21T03:57:00.449Z",
               "EditorCaption": ""
             }
           ]

@@ -29,19 +29,8 @@
         
         <!-- 多媒体按钮 -->
         <div class="media-buttons">
-          <button class="media-btn" @click="recordVoice">
-            <AudioOutlined style="font-size: 24px;" />
-            <span>{{ content.voice ? '已录制' : '语音' }}</span>
-          </button>
-          
-          <button class="media-btn" @click="uploadImage">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <circle cx="8.5" cy="8.5" r="1.5"></circle>
-              <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
-            <span>{{ content.image ? '已上传' : '图片' }}</span>
-          </button>
+          <VoiceUpload v-model="content.voice" />
+          <ImageUpload v-model="content.image" />
         </div>
         
         <!-- 情绪标签 -->
@@ -97,7 +86,7 @@
           {{ showForm ? '取消' : '扔一个瓶子' }}
         </button>
         <button class="btn btn-secondary bottom-btn" @click="goToMessages">
-          消息
+          捡一个
         </button>
       </div>
     </div>
@@ -105,10 +94,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { LeftOutlined, AudioOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import { LeftOutlined } from '@ant-design/icons-vue'
 import request from '../utils/http'
+import ImageUpload from '../components/ImageUpload.vue'
+import VoiceUpload from '../components/VoiceUpload.vue'
 
 const router = useRouter()
 
@@ -127,7 +119,7 @@ const emotions = ['开心', '疲惫', '无聊', '难过', '兴奋', '焦虑']
 const topics = ['游戏', '电影', '情感', '音乐', '旅行', '美食', '读书', '运动']
 
 const goBack = () => {
-  router.back()
+  router.push('/main')
 }
 
 const toggleForm = () => {
@@ -148,17 +140,7 @@ const goToMessages = () => {
   router.push('/bottle-receive')
 }
 
-const recordVoice = () => {
-  // 模拟语音录制
-  content.value.voice = 'voice_' + Date.now()
-  alert('语音录制功能已模拟')
-}
 
-const uploadImage = () => {
-  // 模拟图片上传
-  content.value.image = 'image_' + Date.now()
-  alert('图片上传功能已模拟')
-}
 
 const selectEmotion = (emotion) => {
   content.value.emotion = emotion
@@ -176,7 +158,7 @@ const toggleTopic = (topic) => {
 const throwBottle = async () => {
   // 校验至少有一种内容
   if (!content.value.text && !content.value.voice && !content.value.image) {
-    alert('请至少填写一种内容')
+    message.error('请至少填写一种内容')
     return
   }
   
@@ -196,7 +178,7 @@ const throwBottle = async () => {
     if (response.success) {
       // 显示成功消息
       setTimeout(() => {
-        alert('瓶子已漂向远方…等待回应')
+        message.success('瓶子已漂向远方…等待回应')
         // 重置表单
         content.value = {
           text: '',
@@ -211,12 +193,12 @@ const throwBottle = async () => {
         showForm.value = false
       }, 1000)
     } else {
-      alert('扔瓶子失败，请重试')
+      message.error('扔瓶子失败，请重试')
       showBottleAnimation.value = false
     }
   } catch (error) {
     console.error('扔瓶子失败:', error)
-    alert('扔瓶子失败，请检查网络连接')
+    message.error('扔瓶子失败，请检查网络连接')
     showBottleAnimation.value = false
   }
 }

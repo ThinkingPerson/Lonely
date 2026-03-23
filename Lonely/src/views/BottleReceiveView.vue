@@ -22,6 +22,14 @@
         </div>
         <div class="bottle-body">
           <p>{{ bottleContent }}</p>
+          <!-- 图片显示 -->
+          <div v-if="bottleImage" class="bottle-media">
+            <img :src="bottleImage" alt="Bottle image" class="bottle-image" />
+          </div>
+          <!-- 语音显示 -->
+          <div v-if="bottleVoice" class="bottle-media">
+            <audio :src="bottleVoice" controls class="bottle-audio"></audio>
+          </div>
           <div class="bottle-tags">
             <span class="tag tag-active">{{ bottleEmotion }}</span>
             <span v-for="topic in bottleTopics" :key="topic" class="tag tag-inactive">{{ topic }}</span>
@@ -48,6 +56,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 import { LeftOutlined } from '@ant-design/icons-vue'
 import request from '../utils/http'
 
@@ -56,11 +65,13 @@ const router = useRouter()
 const bottleContent = ref('')
 const bottleEmotion = ref('')
 const bottleTopics = ref([])
+const bottleImage = ref('')
+const bottleVoice = ref('')
 const replyContent = ref('')
 const currentBottleId = ref(0)
 
 const goBack = () => {
-  router.back()
+  router.push('/main')
 }
 
 const pickBottle = async () => {
@@ -71,14 +82,16 @@ const pickBottle = async () => {
       bottleContent.value = bottle.Content
       bottleEmotion.value = bottle.Emotion || ''
       bottleTopics.value = bottle.Topics ? JSON.parse(bottle.Topics) : []
+      bottleImage.value = bottle.ImageUrl || ''
+      bottleVoice.value = bottle.VoiceUrl || ''
       currentBottleId.value = bottle.Id
     } else {
-      alert('暂无漂流瓶')
+      message.info('暂无漂流瓶')
       router.push('/bottle')
     }
   } catch (error) {
     console.error('捡瓶子失败:', error)
-    alert('捡瓶子失败，请检查网络连接')
+    message.error('捡瓶子失败，请检查网络连接')
   }
 }
 
@@ -87,7 +100,7 @@ const sendReply = async () => {
     try {
       // 这里需要实现回复功能，暂时模拟
       setTimeout(() => {
-        alert('回复已发送，对方将收到你的消息')
+        message.success('回复已发送，对方将收到你的消息')
         // 重置表单
         replyContent.value = ''
         // 返回主界面
@@ -95,7 +108,7 @@ const sendReply = async () => {
       }, 1000)
     } catch (error) {
       console.error('回复失败:', error)
-      alert('回复失败，请检查网络连接')
+      message.error('回复失败，请检查网络连接')
     }
   }
 }
@@ -166,6 +179,25 @@ onMounted(() => {
 
 .bottle-tags {
   margin-top: 16px;
+}
+
+.bottle-media {
+  margin: 16px 0;
+}
+
+.bottle-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bottle-audio {
+  width: 100%;
+  height: 40px;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .reply-input textarea {

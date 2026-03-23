@@ -1,6 +1,8 @@
+using LonelyApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SqlSugar;
+using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -87,11 +89,35 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+var assembly = Assembly.GetExecutingAssembly(); // 或指定程序集
+
+// 找到所有实现 IService 的非抽象类
+var serviceTypes = assembly.GetTypes().Where(t => typeof(IService).IsAssignableFrom(t) && !t.IsAbstract && t.IsClass);
+
+foreach (var type in serviceTypes)
+{
+    // 如果有接口，优先注册为 接口 = 实现类
+    var interfaces = type.GetInterfaces().Where(i => i != typeof(IService));
+    if (interfaces.Any())
+    {
+        foreach (var i in interfaces)
+        {
+            builder.Services.AddScoped(i, type);
+        }
+    }
+    else
+    {
+        // 没有接口，直接注册自身
+        builder.Services.AddScoped(type);
+    }
+}
+
+
 // 添加控制器
 builder.Services.AddControllers();
 
 var app = builder.Build();
-
+app.UseForwardedHeaders();
 // 日志中间件
 app.Use(async (context, next) =>
 {
@@ -116,8 +142,14 @@ app.Use(async (context, next) =>
     logger.LogInformation($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Response Status: {context.Response.StatusCode}");
 });
 
+// 使用异常处理中间件
+app.UseMiddleware<LonelyApi.Middlewares.ExceptionHandlerMiddleware>();
+
 // 使用CORS
 app.UseCors("AllowAll");
+
+// 使用静态文件服务
+app.UseStaticFiles();
 
 // 使用Swagger
 app.UseSwagger();
@@ -139,8 +171,10 @@ app.Use(async (context, next) =>
     // 跳过认证的路径
     var skipPaths = new List<string>
     {
-        "/api/Auth/Login",
+        "/api/Auth/QuickLogin",
         "/api/Auth/AnonymousLogin",
+        "/Auth/QuickLogin",
+        "/Auth/AnonymousLogin",
         "/swagger",
         "/swagger/index.html",
         "/swagger/v1/swagger.json"

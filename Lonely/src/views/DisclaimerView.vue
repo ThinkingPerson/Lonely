@@ -44,7 +44,7 @@ import { LeftOutlined } from '@ant-design/icons-vue'
 const router = useRouter()
 
 const goBack = () => {
-  router.back()
+  router.push('/main')
 }
 </script>
 

@@ -11,7 +11,7 @@ namespace LonelyApi.Controllers;
 /// 处理用户登录、匿名登录和获取用户信息等操作
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/[controller]/[action]")]
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
@@ -34,11 +34,33 @@ public class AuthController : ControllerBase
     /// 请求类型: POST
     /// 接口路径: api/Auth/Login
     /// </remarks>
-    [HttpPost("Login")]
+    [HttpPost]
     public async Task<ActionResult<LoginResponse>> QuickLogin([FromBody] LoginRequest request)
     {
-        var response = await _authService.QuickLogin(request.Account, request.Password);
-        return Ok(response);
+        if (request == null)
+        {
+            return BadRequest(new LoginResponse { Success = false, Message = "请求参数为空", Token = null, User = null });
+        }
+
+        if (string.IsNullOrEmpty(request.Account))
+        {
+            return BadRequest(new LoginResponse { Success = false, Message = "账号不能为空", Token = null, User = null });
+        }
+
+        if (string.IsNullOrEmpty(request.Password))
+        {
+            return BadRequest(new LoginResponse { Success = false, Message = "密码不能为空", Token = null, User = null });
+        }
+
+        try
+        {
+            var response = await _authService.QuickLogin(request.Account, request.Password);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new LoginResponse { Success = false, Message = "登录失败: " + ex.Message, Token = null, User = null });
+        }
     }
     
     /// <summary>
@@ -50,20 +72,38 @@ public class AuthController : ControllerBase
     /// 请求类型: POST
     /// 接口路径: api/Auth/AnonymousLogin
     /// </remarks>
-    [HttpPost("AnonymousLogin")]
-    public async Task<ActionResult<ApiResponse<UserInfo>>> AnonymousLogin([FromBody] UserInfo request)
+    [HttpPost]
+    public async Task<ActionResult<LoginResponse>> AnonymousLogin([FromBody] UserInfo request)
     {
-        var user = await _authService.AnonymousLogin(request.AnonUID, request.Nickname, request.Avatar);
-        
-        var userInfo = new UserInfo
+        if (request == null)
         {
-            AnonUID = user.AnonUID,
-            Nickname = user.Nickname,
-            Avatar = user.Avatar,
-            LoginType = user.LoginType
-        };
-        
-        return Ok(new ApiResponse<UserInfo>(true, "登录成功", userInfo));
+            return BadRequest(new LoginResponse { Success = false, Message = "请求参数为空", Token = null, User = null });
+        }
+
+        if (string.IsNullOrEmpty(request.AnonUID))
+        {
+            return BadRequest(new LoginResponse { Success = false, Message = "匿名ID不能为空", Token = null, User = null });
+        }
+
+        if (string.IsNullOrEmpty(request.Nickname))
+        {
+            return BadRequest(new LoginResponse { Success = false, Message = "昵称不能为空", Token = null, User = null });
+        }
+
+        if (string.IsNullOrEmpty(request.Avatar))
+        {
+            return BadRequest(new LoginResponse { Success = false, Message = "头像不能为空", Token = null, User = null });
+        }
+
+        try
+        {
+            var response = await _authService.AnonymousLogin(request.AnonUID, request.Nickname, request.Avatar);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new LoginResponse { Success = false, Message = "登录失败: " + ex.Message, Token = null, User = null });
+        }
     }
     
     /// <summary>
@@ -75,24 +115,31 @@ public class AuthController : ControllerBase
     /// 接口路径: api/Auth/UserInfo
     /// 需要认证
     /// </remarks>
-    [HttpGet("UserInfo")]
+    [HttpGet]
     [Authorize]
     public ActionResult<ApiResponse<UserInfo>> GetUserInfo()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var anonUID = User.FindFirstValue(ClaimTypes.Name);
-        var nickname = User.FindFirstValue("nickname");
-        var avatar = User.FindFirstValue("avatar");
-        var loginType = User.FindFirstValue("loginType");
-        
-        var userInfo = new UserInfo
+        try
         {
-            AnonUID = anonUID,
-            Nickname = nickname,
-            Avatar = avatar,
-            LoginType = loginType
-        };
-        
-        return Ok(new ApiResponse<UserInfo>(true, "获取成功", userInfo));
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var anonUID = User.FindFirstValue(ClaimTypes.Name);
+            var nickname = User.FindFirstValue("nickname");
+            var avatar = User.FindFirstValue("avatar");
+            var loginType = User.FindFirstValue("loginType");
+            
+            var userInfo = new UserInfo
+            {
+                AnonUID = anonUID,
+                Nickname = nickname,
+                Avatar = avatar,
+                LoginType = loginType
+            };
+            
+            return Ok(new ApiResponse<UserInfo>(true, "获取成功", userInfo));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<UserInfo>(false, "获取失败: " + ex.Message, null));
+        }
     }
 }

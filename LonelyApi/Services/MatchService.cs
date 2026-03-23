@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace LonelyApi.Services;
 
-public class MatchService
+public class MatchService : IService
 {
     private readonly ISqlSugarClient _db;
     private readonly IConfiguration _config;

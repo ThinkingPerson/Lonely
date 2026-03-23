@@ -39,9 +39,26 @@ public class TreeHoleController : ControllerBase
     [HttpPost("Post")]
     public async Task<ActionResult<ApiResponse<object>>> PostTreeHole([FromBody] TreeHoleRequest request)
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _treeHoleService.PostTreeHole(userId, request);
-        return Ok(response);
+        if (request == null)
+        {
+            return BadRequest(new ApiResponse<object>(false, "请求参数为空", null));
+        }
+
+        if (string.IsNullOrEmpty(request.Content) && string.IsNullOrEmpty(request.VoiceUrl))
+        {
+            return BadRequest(new ApiResponse<object>(false, "树洞内容不能为空", null));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _treeHoleService.PostTreeHole(userId, request);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, "发布失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -56,9 +73,16 @@ public class TreeHoleController : ControllerBase
     [HttpGet("Random")]
     public async Task<ActionResult<ApiResponse<object>>> GetRandomTreeHole()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _treeHoleService.GetRandomTreeHole(userId);
-        return Ok(response);
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _treeHoleService.GetRandomTreeHole(userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, "获取失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -73,9 +97,16 @@ public class TreeHoleController : ControllerBase
     [HttpGet("My")]
     public async Task<ActionResult<ApiResponse<List<object>>>> GetMyTreeHoles()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _treeHoleService.GetMyTreeHoles(userId);
-        return Ok(response);
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _treeHoleService.GetMyTreeHoles(userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<List<object>>(false, "获取失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -91,8 +122,20 @@ public class TreeHoleController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult<ApiResponse>> DeleteTreeHole(int id)
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _treeHoleService.DeleteTreeHole(id, userId);
-        return Ok(response);
+        if (id <= 0)
+        {
+            return BadRequest(new ApiResponse(false, "树洞ID无效"));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _treeHoleService.DeleteTreeHole(id, userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, "删除失败: " + ex.Message));
+        }
     }
 }

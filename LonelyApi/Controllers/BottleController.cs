@@ -39,9 +39,26 @@ public class BottleController : ControllerBase
     [HttpPost("Throw")]
     public async Task<ActionResult<ApiResponse<object>>> ThrowBottle([FromBody] BottleRequest request)
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _bottleService.ThrowBottle(userId, request);
-        return Ok(response);
+        if (request == null)
+        {
+            return BadRequest(new ApiResponse<object>(false, "请求参数为空", null));
+        }
+
+        if (string.IsNullOrEmpty(request.Content) && string.IsNullOrEmpty(request.VoiceUrl) && string.IsNullOrEmpty(request.ImageUrl))
+        {
+            return BadRequest(new ApiResponse<object>(false, "漂流瓶内容不能为空", null));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _bottleService.ThrowBottle(userId, request);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, "投掷失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -56,9 +73,16 @@ public class BottleController : ControllerBase
     [HttpGet("Pick")]
     public async Task<ActionResult<ApiResponse<object>>> PickBottle()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _bottleService.PickBottle(userId);
-        return Ok(response);
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _bottleService.PickBottle(userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, "拾取失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -73,9 +97,16 @@ public class BottleController : ControllerBase
     [HttpGet("My")]
     public async Task<ActionResult<ApiResponse<List<object>>>> GetMyBottles()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _bottleService.GetMyBottles(userId);
-        return Ok(response);
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _bottleService.GetMyBottles(userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<List<object>>(false, "获取失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -90,9 +121,16 @@ public class BottleController : ControllerBase
     [HttpGet("Received")]
     public async Task<ActionResult<ApiResponse<List<object>>>> GetReceivedBottles()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _bottleService.GetReceivedBottles(userId);
-        return Ok(response);
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _bottleService.GetReceivedBottles(userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<List<object>>(false, "获取失败: " + ex.Message, null));
+        }
     }
     
     /// <summary>
@@ -108,8 +146,20 @@ public class BottleController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult<ApiResponse>> DeleteBottle(int id)
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var response = await _bottleService.DeleteBottle(id, userId);
-        return Ok(response);
+        if (id <= 0)
+        {
+            return BadRequest(new ApiResponse(false, "漂流瓶ID无效"));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _bottleService.DeleteBottle(id, userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, "删除失败: " + ex.Message));
+        }
     }
 }

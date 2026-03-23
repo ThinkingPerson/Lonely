@@ -20,6 +20,12 @@ public class User
     [SugarColumn(ColumnDataType = "varchar(20)", IsNullable = true)]
     public string? Phone { get; set; }
     
+    [SugarColumn(ColumnDataType = "varchar(100)", IsNullable = true)]
+    public string? Password { get; set; }
+    
+    [SugarColumn(ColumnDataType = "varchar(200)", IsNullable = true)]
+    public string? Signature { get; set; }
+    
     [SugarColumn(ColumnDataType = "enum('anonymous','quick')", IsNullable = false, DefaultValue = "'anonymous'")]
     public string LoginType { get; set; }
     

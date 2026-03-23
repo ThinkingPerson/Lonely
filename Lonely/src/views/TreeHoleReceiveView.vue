@@ -18,6 +18,14 @@
         </div>
         <div class="treehole-body">
           <p>{{ treeholeContent }}</p>
+          <!-- 图片显示 -->
+          <div v-if="treeholeImage" class="treehole-media">
+            <img :src="treeholeImage" alt="Treehole image" class="treehole-image" />
+          </div>
+          <!-- 语音显示 -->
+          <div v-if="treeholeVoice" class="treehole-media">
+            <audio :src="treeholeVoice" controls class="treehole-audio"></audio>
+          </div>
         </div>
       </div>
       
@@ -57,10 +65,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 
 const router = useRouter()
 
 const treeholeContent = ref('今天天气真好，但是我有点孤独。想找个人说说话，但是又不想被认识的人知道。这就是我使用这个匿名App的原因吧。')
+const treeholeImage = ref('')
+const treeholeVoice = ref('')
 
 const replies = ref([
   { content: '我也有同感，有时候就是想和陌生人聊聊', time: '5分钟前' },
@@ -70,7 +81,7 @@ const replies = ref([
 const replyContent = ref('')
 
 const goBack = () => {
-  router.back()
+  router.push('/main')
 }
 
 const sendReply = () => {
@@ -82,7 +93,7 @@ const sendReply = () => {
     })
     
     replyContent.value = ''
-    alert('回复已发送，将匿名展示')
+    message.success('回复已发送，将匿名展示')
   }
 }
 </script>
@@ -144,6 +155,25 @@ const sendReply = () => {
   font-size: 16px;
   line-height: 1.5;
   color: #333;
+}
+
+.treehole-media {
+  margin: 16px 0;
+}
+
+.treehole-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.treehole-audio {
+  width: 100%;
+  height: 40px;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .replies {

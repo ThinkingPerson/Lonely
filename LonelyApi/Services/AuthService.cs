@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace LonelyApi.Services;
 
-public class AuthService
+public class AuthService: IService
 {
     private readonly ISqlSugarClient _db;
     private readonly IConfiguration _config;
@@ -22,85 +22,97 @@ public class AuthService
     
     public async Task<LoginResponse> QuickLogin(string phone, string password)
     {
-        // 模拟快捷登录验证
-        if (phone == "18860423687" && password == "423687")
+        // 验证输入
+        if (string.IsNullOrEmpty(phone) || string.IsNullOrEmpty(password))
         {
-            // 生成随机匿名UID
-            var anonUID = Guid.NewGuid().ToString("N");
-            
-            // 检查用户是否存在
-            var existingUser = await _db.Queryable<User>()
-                .Where(u => u.Phone == phone)
-                .FirstAsync();
-            
-            User user;
-            if (existingUser != null)
-            {
-                // 更新用户信息
-                existingUser.AnonUID = anonUID;
-                existingUser.LastLoginTime = DateTime.Now;
-                existingUser.LoginType = "quick";
-                await _db.Updateable(existingUser).ExecuteCommandAsync();
-                user = existingUser;
-            }
-            else
-            {
-                // 创建新用户
-                user = new User
-                {
-                    AnonUID = anonUID,
-                    Nickname = GenerateRandomNickname(),
-                    Avatar = GenerateRandomAvatar(),
-                    Phone = phone,
-                    LoginType = "quick",
-                    LastLoginTime = DateTime.Now
-                };
-                await _db.Insertable(user).ExecuteCommandAsync();
-            }
-            
-            // 生成JWT令牌
-            var token = GenerateJwtToken(user);
-            
             return new LoginResponse
             {
-                Success = true,
-                Token = token,
-                User = new UserInfo
-                {
-                    AnonUID = user.AnonUID,
-                    Nickname = user.Nickname,
-                    Avatar = user.Avatar,
-                    LoginType = user.LoginType
-                }
+                Success = false,
+                Message = "请输入账号和密码",
+                Token = null,
+                User = null
             };
         }
         
+        // 检查用户是否存在
+        var existingUser = await _db.Queryable<User>()
+            .Where(u => u.Phone == phone)
+            .FirstAsync();
+        
+        User user;
+        if (existingUser != null)
+        {
+            // 验证密码
+            if (existingUser.Password != password) // 实际应用中应该使用密码加密
+            {
+                return new LoginResponse
+                {
+                    Success = false,
+                    Message = "密码错误",
+                    Token = null,
+                    User = null
+                };
+            }
+            
+            // 更新用户信息
+            existingUser.LastLoginTime = DateTime.Now;
+            existingUser.LoginType = "quick";
+            await _db.Updateable(existingUser).ExecuteCommandAsync();
+            user = existingUser;
+        }
+        else
+        {
+            // 创建新用户
+            user = new User
+            {
+                AnonUID = Guid.NewGuid().ToString("N"),
+                Nickname = GenerateRandomNickname(),
+                Avatar = GenerateRandomAvatar(),
+                Phone = phone,
+                Password = password, // 实际应用中应该使用密码加密
+                LoginType = "quick",
+                LastLoginTime = DateTime.Now
+            };
+            await _db.Insertable(user).ExecuteCommandAsync();
+        }
+        
+        // 生成JWT令牌
+        var token = GenerateJwtToken(user);
+        
         return new LoginResponse
         {
-            Success = false,
-            Token = null,
-            User = null
+            Success = true,
+            Message = "登录成功",
+            Token = token,
+            User = new UserInfo
+            {
+                AnonUID = user.AnonUID,
+                Nickname = user.Nickname,
+                Avatar = user.Avatar,
+                LoginType = user.LoginType
+            }
         };
     }
     
-    public async Task<User> AnonymousLogin(string anonUID, string nickname, string avatar)
+    public async Task<LoginResponse> AnonymousLogin(string anonUID, string nickname, string avatar)
     {
         // 检查用户是否存在
         var existingUser = await _db.Queryable<User>()
             .Where(u => u.AnonUID == anonUID)
             .FirstAsync();
         
+        User user;
         if (existingUser != null)
         {
             // 更新用户信息
             existingUser.LastLoginTime = DateTime.Now;
             await _db.Updateable(existingUser).ExecuteCommandAsync();
-            return existingUser;
+            user = existingUser;
         }
         else
         {
             // 创建新用户
-            var user = new User
+            user = new User
             {
                 AnonUID = anonUID,
                 Nickname = nickname,
@@ -109,8 +121,24 @@ public class AuthService
                 LastLoginTime = DateTime.Now
             };
             await _db.Insertable(user).ExecuteCommandAsync();
-            return user;
         }
+        
+        // 生成JWT令牌
+        var token = GenerateJwtToken(user);
+        
+        return new LoginResponse
+        {
+            Success = true,
+            Message = "登录成功",
+            Token = token,
+            User = new UserInfo
+            {
+                AnonUID = user.AnonUID,
+                Nickname = user.Nickname,
+                Avatar = user.Avatar,
+                LoginType = user.LoginType
+            }
+        };
     }
     
     private string GenerateJwtToken(User user)

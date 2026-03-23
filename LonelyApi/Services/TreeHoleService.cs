@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace LonelyApi.Services;
 
-public class TreeHoleService
+public class TreeHoleService : IService
 {
     private readonly ISqlSugarClient _db;
     private readonly IConfiguration _config;

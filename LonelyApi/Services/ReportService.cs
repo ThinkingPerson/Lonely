@@ -4,7 +4,7 @@ using LonelyApi.DTOs;
 
 namespace LonelyApi.Services;
 
-public class ReportService
+public class ReportService : IService
 {
     private readonly ISqlSugarClient _db;
     

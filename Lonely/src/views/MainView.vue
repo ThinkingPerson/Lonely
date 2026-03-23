@@ -9,13 +9,18 @@
     <div class="content-wrapper">
       <!-- 顶部用户信息 -->
       <div class="header">
-        <div class="user-info">
+        <div class="user-info" @click="goToProfile">
           <div class="avatar" :style="{ backgroundColor: avatar }">{{ nickname.charAt(0) }}</div>
           <span class="nickname">{{ nickname }}</span>
         </div>
-        <button class="settings-btn" @click="goToSettings">
-          <SettingOutlined />
-        </button>
+        <div class="header-buttons">
+          <button class="profile-btn" @click="goToProfile">
+            <UserOutlined />
+          </button>
+          <button class="settings-btn" @click="goToSettings">
+            <SettingOutlined />
+          </button>
+        </div>
       </div>
       
       <!-- 快捷登录提示 -->
@@ -23,6 +28,58 @@
       <div class="tip-content">
         <p>快捷登录可增强身份保护，在举报或纠纷中提供更完整的身份依据，防止被冒用。</p>
         <button class="tip-btn" @click="showLoginPrompt">了解更多</button>
+      </div>
+    </div>
+    
+    <!-- 签到功能 -->
+    <div class="check-in-section" v-if="!isCheckedIn">
+      <div class="check-in-card">
+        <div class="check-in-icon">
+          <span class="icon">
+            <SmileOutlined />
+          </span>
+        </div>
+        <h3 class="check-in-title">今日签到</h3>
+        <p class="check-in-desc">记录你的每日心情</p>
+        <div class="status-options">
+          <div 
+            v-for="(status, index) in defaultStatuses" 
+            :key="index"
+            class="status-option"
+            @click="selectStatus(status)"
+            :class="{ active: selectedStatus === status }"
+          >
+            {{ status }}
+          </div>
+          <div class="status-option custom-status-option" @click="showCustomInput = !showCustomInput">
+            自定义状态+
+          </div>
+          <div class="custom-status-input-container" v-if="showCustomInput">
+            <input 
+              type="text" 
+              v-model="customStatus" 
+              placeholder="输入自定义状态"
+              class="custom-status-input"
+              @blur="selectStatus(customStatus); showCustomInput = false"
+              @keyup.enter="selectStatus(customStatus); showCustomInput = false"
+              ref="customInput"
+            />
+          </div>
+        </div>
+        <button 
+          class="check-in-btn" 
+          @click="checkIn"
+          :disabled="!selectedStatus || loading"
+        >
+          {{ loading ? '签到中...' : '立即签到' }}
+        </button>
+      </div>
+    </div>
+    <div class="check-in-section" v-else>
+      <div class="checked-in-card">
+        <div class="checked-in-icon">✓</div>
+        <h3 class="checked-in-title">今日已签到</h3>
+        <p class="checked-in-status">{{ todayStatus }}</p>
       </div>
     </div>
     
@@ -57,6 +114,16 @@
           <span class="function-desc">匿名分享心情，释放内心压力</span>
         </div>
       </button>
+      
+      <button class="function-btn" @click="goToFeed">
+        <div class="function-icon feed-icon">
+          <FireOutlined />
+        </div>
+        <div class="function-content">
+          <span class="function-title">动态广场</span>
+          <span class="function-desc">查看和发布动态，与朋友互动</span>
+        </div>
+      </button>
     </div>
     
     <!-- 底部链接 -->
@@ -65,19 +132,38 @@
       <span class="link-divider">·</span>
       <span class="link" @click="goToDisclaimer">免责声明</span>
     </div>
-    </div>
   </div>
+</div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { SettingOutlined, MessageOutlined, TeamOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import { SettingOutlined, MessageOutlined, TeamOutlined, DeleteOutlined, UserOutlined, FireOutlined, SmileOutlined } from '@ant-design/icons-vue'
+import { checkInApi } from '../services/api'
 
 const router = useRouter()
 const nickname = ref('')
 const avatar = ref('#007aff')
 const hasLoggedIn = ref(false)
+
+// 签到相关状态
+const isCheckedIn = ref(false)
+const todayStatus = ref('')
+const selectedStatus = ref('')
+const customStatus = ref('')
+const showCheckInAnimation = ref(false)
+const showCustomInput = ref(false)
+const customInput = ref(null)
+const loading = ref(false)
+
+// 默认状态词
+const defaultStatuses = [
+  '又活了一天',
+  '我还活着',
+  '又是美好的一天'
+]
 
 onMounted(() => {
   // 从本地存储获取用户信息
@@ -98,12 +184,66 @@ onMounted(() => {
   
   // 检查是否已登录
   hasLoggedIn.value = !!loginType
+  
+  // 检查今日是否已签到
+  checkIfCheckedIn()
 })
+
+// 检查今日是否已签到
+const checkIfCheckedIn = async () => {
+  try {
+    const response = await checkInApi.getStatus()
+    if (response.success) {
+      isCheckedIn.value = response.data.isCheckedIn
+      todayStatus.value = response.data.status || ''
+    }
+  } catch (error) {
+    console.error('获取签到状态失败:', error)
+    // 失败时不更新页面状态，保持原样
+  }
+}
+
+// 选择状态
+const selectStatus = (status) => {
+  selectedStatus.value = status
+  customStatus.value = status
+}
+
+// 签到
+const checkIn = async () => {
+  if (!selectedStatus.value) return
+  
+  try {
+    loading.value = true
+    const response = await checkInApi.checkIn({
+      status: selectedStatus.value
+    })
+    
+    if (response.success) {
+      // 更新状态
+      isCheckedIn.value = true
+      todayStatus.value = selectedStatus.value
+      
+      // 显示签到动画
+      showCheckInAnimation.value = true
+      setTimeout(() => {
+        showCheckInAnimation.value = false
+      }, 2000)
+    } else {
+      message.error('签到失败：' + response.message)
+    }
+  } catch (error) {
+    console.error('签到失败:', error)
+    // 失败时不更新页面状态，保持原样
+  } finally {
+    loading.value = false
+  }
+}
 
 const showLoginPrompt = () => {
   // 这里可以实现登录提示逻辑
-  // 暂时使用 alert 模拟
-  alert('快捷登录功能正在开发中，敬请期待！')
+  // 暂时使用 message 模拟
+  message.info('快捷登录功能正在开发中，敬请期待！')
 }
 
 const goToBottle = () => {
@@ -120,6 +260,14 @@ const goToTreeHole = () => {
 
 const goToSettings = () => {
   router.push('/settings')
+}
+
+const goToProfile = () => {
+  router.push('/profile')
+}
+
+const goToFeed = () => {
+  router.push('/feed')
 }
 
 const goToMessages = () => {
@@ -231,6 +379,12 @@ const goToDisclaimer = () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-info:hover {
+  transform: translateY(-2px);
 }
 
 .avatar {
@@ -243,6 +397,11 @@ const goToDisclaimer = () => {
   color: white;
   font-weight: 600;
   font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.user-info:hover .avatar {
+  transform: scale(1.1);
 }
 
 .nickname {
@@ -250,6 +409,31 @@ const goToDisclaimer = () => {
   font-weight: 600;
   color: white;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: white;
+  padding: 8px;
+  font-size: 20px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.profile-btn:hover {
+  transform: translateY(-2px);
+  color: #e0e0e0;
 }
 
 .settings-btn {
@@ -263,6 +447,12 @@ const goToDisclaimer = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.settings-btn:hover {
+  transform: translateY(-2px);
+  color: #e0e0e0;
 }
 
 .functions {
@@ -343,14 +533,13 @@ const goToDisclaimer = () => {
 
 /* 底部链接 */
 .bottom-links {
-  margin-top: auto;
-  margin-bottom: 32px;
+  padding-top: 15px;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding: 0 20px;
+  padding: 30px 20px 0;
 }
 
 .link {
@@ -369,5 +558,290 @@ const goToDisclaimer = () => {
 .link-divider {
   color: rgba(255, 255, 255, 0.5);
   font-size: 14px;
+}
+
+/* 签到功能 */
+.check-in-section {
+  margin-bottom: 30px;
+}
+
+.check-in-card {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.5s ease;
+}
+
+.check-in-icon {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+  animation: pulse 1s ease-in-out;
+}
+
+.check-in-icon .icon {
+  font-size: 55px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.check-in-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 10px 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.check-in-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 20px 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.status-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  justify-content: center;
+}
+
+.status-option {
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.status-option:hover {
+  border-color: #9b59b6;
+  color: #9b59b6;
+  background: rgba(155, 89, 182, 0.2);
+}
+
+.status-option.active {
+  background-color: #9b59b6;
+  border-color: #9b59b6;
+  color: white;
+}
+
+.custom-status-option {
+  font-weight: 600;
+}
+
+.custom-status-input-container {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.custom-status-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: border-color 0.3s ease;
+}
+
+.custom-status-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.custom-status-input:focus {
+  outline: none;
+  border-color: #9b59b6;
+}
+
+.check-in-btn {
+  width: 100%;
+  padding: 18px;
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ff4081 0%, #7b1fa2 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(255, 64, 129, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.check-in-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.check-in-btn:hover:not(:disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(255, 64, 129, 0.7);
+  background: linear-gradient(135deg, #ff80ab 0%, #9c27b0 100%);
+}
+
+.check-in-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.check-in-btn:disabled {
+  background: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.checked-in-card {
+  background: rgba(76, 175, 80, 0.2);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.5s ease;
+}
+
+.checked-in-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #4caf50;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0 auto 15px;
+  animation: pulse 1s ease-in-out;
+}
+
+.checked-in-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 10px 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.checked-in-status {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+/* 动态广场图标样式 */
+.feed-icon {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+}
+
+/* 签到动画 */
+.check-in-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.animation-content {
+  background-color: white;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  animation: scaleIn 0.3s ease;
+}
+
+.check-mark {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #4caf50;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 700;
+  margin: 0 auto 20px;
+  animation: pulse 1s ease-in-out;
+}
+
+.animation-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 </style>

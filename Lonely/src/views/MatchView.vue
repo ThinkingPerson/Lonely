@@ -59,7 +59,7 @@ const isMatching = ref(false)
 const interests = ['游戏', '电影', '音乐', '旅行', '美食', '读书', '运动', '科技', '艺术', '情感']
 
 const goBack = () => {
-  router.back()
+  router.push('/main')
 }
 
 const toggleInterest = (interest) => {

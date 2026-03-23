@@ -76,6 +76,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 
 const router = useRouter()
 
@@ -89,7 +90,7 @@ const inputMessage = ref('')
 const burnAfterReading = ref(false)
 
 const goBack = () => {
-  router.back()
+  router.push('/main')
 }
 
 const sendMessage = () => {
@@ -120,15 +121,15 @@ const sendMessage = () => {
 }
 
 const sendVoice = () => {
-  alert('语音发送功能已模拟')
+  message.info('语音发送功能已模拟')
 }
 
 const sendEmoji = () => {
-  alert('表情发送功能已模拟')
+  message.info('表情发送功能已模拟')
 }
 
 const sendImage = (event) => {
-  alert('图片发送功能已模拟')
+  message.info('图片发送功能已模拟')
 }
 
 const endChat = () => {
@@ -141,7 +142,7 @@ onMounted(() => {
   // 模拟聊天开始
   if (burnAfterReading.value) {
     setTimeout(() => {
-      alert('阅后即焚已开启，消息将在60秒后自动删除')
+      message.info('阅后即焚已开启，消息将在60秒后自动删除')
     }, 1000)
   }
 })
