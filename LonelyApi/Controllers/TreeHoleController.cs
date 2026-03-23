@@ -16,14 +16,17 @@ namespace LonelyApi.Controllers;
 public class TreeHoleController : ControllerBase
 {
     private readonly TreeHoleService _treeHoleService;
+    private readonly StatsService _statsService;
     
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="treeHoleService">树洞服务</param>
-    public TreeHoleController(TreeHoleService treeHoleService)
+    /// <param name="statsService">统计服务</param>
+    public TreeHoleController(TreeHoleService treeHoleService, StatsService statsService)
     {
         _treeHoleService = treeHoleService;
+        _statsService = statsService;
     }
     
     /// <summary>
@@ -53,6 +56,10 @@ public class TreeHoleController : ControllerBase
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var response = await _treeHoleService.PostTreeHole(userId, request);
+            
+            // 记录树洞统计
+            await _statsService.RecordTreeHole();
+            
             return Ok(response);
         }
         catch (Exception ex)
@@ -136,6 +143,75 @@ public class TreeHoleController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new ApiResponse(false, "删除失败: " + ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// 回复树洞接口
+    /// </summary>
+    /// <param name="request">回复请求参数</param>
+    /// <returns>操作响应</returns>
+    /// <remarks>
+    /// 请求类型: POST
+    /// 接口路径: api/TreeHole/Reply
+    /// 需要认证
+    /// </remarks>
+    [HttpPost("Reply")]
+    public async Task<ActionResult<ApiResponse<object>>> ReplyTreeHole([FromBody] TreeHoleReplyRequest request)
+    {
+        if (request == null)
+        {
+            return BadRequest(new ApiResponse<object>(false, "请求参数为空", null));
+        }
+
+        if (request.TreeHoleId <= 0)
+        {
+            return BadRequest(new ApiResponse<object>(false, "树洞ID无效", null));
+        }
+
+        if (string.IsNullOrEmpty(request.Content))
+        {
+            return BadRequest(new ApiResponse<object>(false, "回复内容不能为空", null));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _treeHoleService.AddTreeHoleReply(userId, request);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, "回复失败: " + ex.Message, null));
+        }
+    }
+
+    /// <summary>
+    /// 获取树洞回复列表接口
+    /// </summary>
+    /// <param name="treeHoleId">树洞ID</param>
+    /// <returns>回复列表响应</returns>
+    /// <remarks>
+    /// 请求类型: GET
+    /// 接口路径: api/TreeHole/Replies/{treeHoleId}
+    /// 需要认证
+    /// </remarks>
+    [HttpGet("Replies/{treeHoleId}")]
+    public async Task<ActionResult<ApiResponse<List<object>>>> GetTreeHoleReplies(int treeHoleId)
+    {
+        if (treeHoleId <= 0)
+        {
+            return BadRequest(new ApiResponse<List<object>>(false, "树洞ID无效", null));
+        }
+
+        try
+        {
+            var response = await _treeHoleService.GetTreeHoleReplies(treeHoleId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<List<object>>(false, "获取失败: " + ex.Message, null));
         }
     }
 }

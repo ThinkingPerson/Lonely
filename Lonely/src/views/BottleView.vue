@@ -99,6 +99,7 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { LeftOutlined } from '@ant-design/icons-vue'
 import request from '../utils/http'
+import { statsApi } from '../services/api'
 import ImageUpload from '../components/ImageUpload.vue'
 import VoiceUpload from '../components/VoiceUpload.vue'
 
@@ -176,6 +177,11 @@ const throwBottle = async () => {
     })
     
     if (response.success) {
+      // 记录扔瓶子统计
+      statsApi.recordBottle().catch(error => {
+        console.error('记录扔瓶子失败:', error)
+      })
+      
       // 显示成功消息
       setTimeout(() => {
         message.success('瓶子已漂向远方…等待回应')

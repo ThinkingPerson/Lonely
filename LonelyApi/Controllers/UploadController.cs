@@ -82,7 +82,7 @@ public class UploadController : ControllerBase
             }
 
             // 生成文件访问URL
-            var fileUrl = $"/uploads/images/{fileName}";
+            var fileUrl = $"/public/uploads/images/{fileName}";
             return Ok(new ApiResponse<string>(true, "上传成功", fileUrl));
         }
         catch (Exception ex)
@@ -140,7 +140,7 @@ public class UploadController : ControllerBase
             }
 
             // 生成文件访问URL
-            var fileUrl = $"/uploads/voices/{fileName}";
+            var fileUrl = $"/public/uploads/voices/{fileName}";
             return Ok(new ApiResponse<string>(true, "上传成功", fileUrl));
         }
         catch (Exception ex)

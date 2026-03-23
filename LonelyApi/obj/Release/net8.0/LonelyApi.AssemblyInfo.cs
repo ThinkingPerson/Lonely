@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LonelyApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+00a8b36ec9b966466c0c4a4ea3553626f2a395d1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+279fbe24ef5782159ea2cca80b010cfb3f2e10be")]
 [assembly: System.Reflection.AssemblyProductAttribute("LonelyApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LonelyApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

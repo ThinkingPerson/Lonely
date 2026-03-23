@@ -159,4 +159,83 @@ public class PostService : IService
 
         return new ApiResponse<object>(true, "获取评论成功", pagination);
     }
+
+    public async Task<ApiResponse> DeletePost(int postId, int userId)
+    {
+        // 检查动态是否存在且属于当前用户
+        var post = await _db.Queryable<Post>()
+            .Where(p => p.Id == postId && p.UserId == userId)
+            .FirstAsync();
+
+        if (post == null)
+        {
+            return new ApiResponse(false, "动态不存在或无权限删除");
+        }
+
+        // 开始事务
+        _db.Ado.BeginTran();
+        try
+        {
+            // 删除相关的点赞
+            await _db.Deleteable<Like>().Where(l => l.PostId == postId).ExecuteCommandAsync();
+
+            // 删除相关的评论
+            await _db.Deleteable<Comment>().Where(c => c.PostId == postId).ExecuteCommandAsync();
+
+            // 删除动态
+            await _db.Deleteable<Post>().Where(p => p.Id == postId).ExecuteCommandAsync();
+
+            // 提交事务
+            _db.Ado.CommitTran();
+
+            return new ApiResponse(true, "删除成功");
+        }
+        catch (Exception ex)
+        {
+            // 回滚事务
+            _db.Ado.RollbackTran();
+            return new ApiResponse(false, "删除失败: " + ex.Message);
+        }
+    }
+
+    public async Task<ApiResponse> DeleteComment(int commentId, int userId)
+    {
+        // 检查评论是否存在且属于当前用户
+        var comment = await _db.Queryable<Comment>()
+            .Where(c => c.Id == commentId && c.UserId == userId)
+            .FirstAsync();
+
+        if (comment == null)
+        {
+            return new ApiResponse(false, "评论不存在或无权限删除");
+        }
+
+        // 开始事务
+        _db.Ado.BeginTran();
+        try
+        {
+            // 记录帖子ID，用于后续更新评论数
+            var postId = comment.PostId;
+
+            // 删除评论
+            await _db.Deleteable<Comment>().Where(c => c.Id == commentId).ExecuteCommandAsync();
+
+            // 更新帖子评论数
+            await _db.Updateable<Post>()
+                .SetColumns(p => p.CommentCount == p.CommentCount - 1)
+                .Where(p => p.Id == postId)
+                .ExecuteCommandAsync();
+
+            // 提交事务
+            _db.Ado.CommitTran();
+
+            return new ApiResponse(true, "删除成功");
+        }
+        catch (Exception ex)
+        {
+            // 回滚事务
+            _db.Ado.RollbackTran();
+            return new ApiResponse(false, "删除失败: " + ex.Message);
+        }
+    }
 }

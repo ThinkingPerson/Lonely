@@ -17,14 +17,17 @@ namespace LonelyApi.Controllers;
 public class PostController : ControllerBase
 {
     private readonly PostService _postService;
+    private readonly StatsService _statsService;
     
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="postService">动态服务</param>
-    public PostController(PostService postService)
+    /// <param name="statsService">统计服务</param>
+    public PostController(PostService postService, StatsService statsService)
     {
         _postService = postService;
+        _statsService = statsService;
     }
     
     /// <summary>
@@ -54,6 +57,10 @@ public class PostController : ControllerBase
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var response = await _postService.CreatePost(userId, request);
+            
+            // 记录动态统计
+            await _statsService.RecordPost();
+            
             return Ok(response);
         }
         catch (Exception ex)
@@ -207,6 +214,66 @@ public class PostController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new ApiResponse<object>(false, "获取失败: " + ex.Message, null));
+        }
+    }
+
+    /// <summary>
+    /// 删除动态接口
+    /// </summary>
+    /// <param name="postId">动态ID</param>
+    /// <returns>操作响应</returns>
+    /// <remarks>
+    /// 请求类型: DELETE
+    /// 接口路径: api/Post/{postId}
+    /// 需要认证
+    /// </remarks>
+    [HttpDelete("{postId}")]
+    public async Task<ActionResult<ApiResponse>> DeletePost(int postId)
+    {
+        if (postId <= 0)
+        {
+            return BadRequest(new ApiResponse(false, "动态ID无效"));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _postService.DeletePost(postId, userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, "删除失败: " + ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// 删除评论接口
+    /// </summary>
+    /// <param name="commentId">评论ID</param>
+    /// <returns>操作响应</returns>
+    /// <remarks>
+    /// 请求类型: DELETE
+    /// 接口路径: api/Post/Comment/{commentId}
+    /// 需要认证
+    /// </remarks>
+    [HttpDelete("Comment/{commentId}")]
+    public async Task<ActionResult<ApiResponse>> DeleteComment(int commentId)
+    {
+        if (commentId <= 0)
+        {
+            return BadRequest(new ApiResponse(false, "评论ID无效"));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _postService.DeleteComment(commentId, userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, "删除失败: " + ex.Message));
         }
     }
 }

@@ -81,7 +81,7 @@ import { message } from 'ant-design-vue'
 import PageHeader from '../components/PageHeader.vue'
 import ImageUpload from '../components/ImageUpload.vue'
 import VoiceUpload from '../components/VoiceUpload.vue'
-import { postApi } from '../services/api'
+import { postApi, statsApi } from '../services/api'
 
 const router = useRouter()
 
@@ -133,9 +133,21 @@ const removeAudio = () => {
   selectedAudio.value = ''
 }
 
+// 检查是否登录
+const isLoggedIn = computed(() => {
+  const loginType = localStorage.getItem('loginType')
+  return loginType && loginType !== 'anonymous'
+})
+
 // 发布动态
 const publishPost = async () => {
   if (!isFormValid.value) return
+  
+  if (!isLoggedIn.value) {
+    message.error('请先登录后再发布动态')
+    router.push('/entry')
+    return
+  }
   
   try {
     loading.value = true
@@ -146,6 +158,11 @@ const publishPost = async () => {
     })
     
     if (response.success) {
+      // 记录动态发布统计
+      statsApi.recordPost().catch(error => {
+        console.error('记录动态发布失败:', error)
+      })
+      
       message.success('动态发布成功！')
       // 跳转到动态广场页面
       router.push('/feed')
@@ -162,7 +179,10 @@ const publishPost = async () => {
 
 // 初始化
 onMounted(() => {
-  // 可以在这里初始化数据
+  // 检查登录状态
+  if (!isLoggedIn.value) {
+    message.info('请登录后发布动态')
+  }
 })
 </script>
 

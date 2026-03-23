@@ -220,13 +220,17 @@ const toggleLike = async (post) => {
       post.likes--
     }
     
-    // 这里需要调用点赞API
-    // await postApi.like(post.id)
+    // 调用点赞API
+    const response = await request.post(`/Post/Like/${post.id}`)
+    if (!response.success) {
+      throw new Error(response.message || '点赞失败')
+    }
   } catch (error) {
     console.error('点赞失败:', error)
     // 失败时恢复原状态
     post.liked = originalLiked
     post.likes = originalLikes
+    message.error('操作失败，请稍后重试')
   }
 }
 
@@ -235,13 +239,17 @@ const toggleComments = async (post) => {
   post.showComments = !post.showComments
   if (post.showComments && (!post.comments || post.comments.length === 0)) {
     try {
-      const response = await request.get(`/Post/GetComments?postId=${post.id}&page=1&pageSize=20`)
+      const response = await request.get(`/Post/Comments/${post.id}?page=1&pageSize=20`)
       if (response.success) {
         post.comments = response.data.list || []
+      } else {
+        message.error('获取评论失败: ' + (response.message || '未知错误'))
+        post.comments = []
       }
     } catch (error) {
       console.error('获取评论失败:', error)
-      // 失败时不改变页面状态
+      message.error('获取评论失败，请稍后重试')
+      post.comments = []
     }
   }
 }
@@ -253,32 +261,24 @@ const addComment = async (post) => {
   const originalComment = commentInput.value
   
   try {
-    // 这里需要调用评论API
-    // const response = await postApi.comment({
-    //   postId: post.id,
-    //   content: commentInput.value
-    // })
+    // 调用评论API
+    const response = await request.post('/Post/Comment', {
+      PostId: post.id,
+      Content: commentInput.value
+    })
     
-    // if (response.success) {
-    //   const newComment = response.data
-    //   post.comments.push(newComment)
-    //   commentInput.value = ''
-    // }
-    
-    // 暂时模拟添加评论
-    const newComment = {
-      id: Date.now(),
-      userId: userId.value,
-      username: '当前用户',
-      avatar: '#9b59b6',
-      content: commentInput.value,
-      time: new Date().toLocaleString()
+    if (response.success) {
+      const newComment = response.data
+      if (!post.comments) post.comments = []
+      post.comments.push(newComment)
+      commentInput.value = ''
+      message.success('评论成功')
+    } else {
+      throw new Error(response.message || '评论失败')
     }
-    if (!post.comments) post.comments = []
-    post.comments.push(newComment)
-    commentInput.value = ''
   } catch (error) {
     console.error('评论失败:', error)
+    message.error('评论失败，请稍后重试')
     // 失败时不改变页面状态，保持评论输入框内容
   }
 }
@@ -311,11 +311,14 @@ const deletePost = (post, index) => {
     cancelText: '取消',
     onOk: async () => {
       try {
-        // 这里需要调用删除动态的API
-        // await postApi.delete(post.id)
-        // 暂时模拟删除
-        posts.value.splice(index, 1)
-        message.success('动态删除成功')
+        // 调用删除动态的API
+        const response = await request.delete(`/Post/${post.id}`)
+        if (response.success) {
+          posts.value.splice(index, 1)
+          message.success('动态删除成功')
+        } else {
+          throw new Error(response.message || '删除失败')
+        }
       } catch (error) {
         console.error('删除动态失败:', error)
         message.error('删除失败，请稍后重试')
@@ -326,6 +329,9 @@ const deletePost = (post, index) => {
 
 // 删除评论
 const deleteComment = (post, commentIndex) => {
+  const comment = post.comments[commentIndex]
+  if (!comment) return
+  
   Modal.confirm({
     title: '确认删除',
     content: '确定要删除这条评论吗？',
@@ -333,11 +339,14 @@ const deleteComment = (post, commentIndex) => {
     cancelText: '取消',
     onOk: async () => {
       try {
-        // 这里需要调用删除评论的API
-        // await postApi.deleteComment(post.id, post.comments[commentIndex].id)
-        // 暂时模拟删除
-        post.comments.splice(commentIndex, 1)
-        message.success('评论删除成功')
+        // 调用删除评论的API
+        const response = await request.delete(`/Post/Comment/${comment.id}`)
+        if (response.success) {
+          post.comments.splice(commentIndex, 1)
+          message.success('评论删除成功')
+        } else {
+          throw new Error(response.message || '删除失败')
+        }
       } catch (error) {
         console.error('删除评论失败:', error)
         message.error('删除失败，请稍后重试')
@@ -380,9 +389,12 @@ const loadPosts = async (isLoadMore = false) => {
       total.value = pagination.total || 0
       hasMore.value = currentPage.value < pagination.totalPages
       currentPage.value++
+    } else {
+      message.error('获取动态失败: ' + (response.message || '未知错误'))
     }
   } catch (error) {
     console.error('获取动态失败:', error)
+    message.error('获取动态失败，请稍后重试')
   } finally {
     loading.value = false
     loadingMore.value = false

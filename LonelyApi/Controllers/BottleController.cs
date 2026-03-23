@@ -16,14 +16,17 @@ namespace LonelyApi.Controllers;
 public class BottleController : ControllerBase
 {
     private readonly BottleService _bottleService;
+    private readonly StatsService _statsService;
     
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="bottleService">漂流瓶服务</param>
-    public BottleController(BottleService bottleService)
+    /// <param name="statsService">统计服务</param>
+    public BottleController(BottleService bottleService, StatsService statsService)
     {
         _bottleService = bottleService;
+        _statsService = statsService;
     }
     
     /// <summary>
@@ -53,6 +56,10 @@ public class BottleController : ControllerBase
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var response = await _bottleService.ThrowBottle(userId, request);
+            
+            // 记录扔瓶子统计
+            await _statsService.RecordBottle();
+            
             return Ok(response);
         }
         catch (Exception ex)
@@ -160,6 +167,75 @@ public class BottleController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new ApiResponse(false, "删除失败: " + ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// 回复漂流瓶接口
+    /// </summary>
+    /// <param name="request">回复请求参数</param>
+    /// <returns>操作响应</returns>
+    /// <remarks>
+    /// 请求类型: POST
+    /// 接口路径: api/Bottle/Reply
+    /// 需要认证
+    /// </remarks>
+    [HttpPost("Reply")]
+    public async Task<ActionResult<ApiResponse<object>>> ReplyBottle([FromBody] BottleReplyRequest request)
+    {
+        if (request == null)
+        {
+            return BadRequest(new ApiResponse<object>(false, "请求参数为空", null));
+        }
+
+        if (request.BottleId <= 0)
+        {
+            return BadRequest(new ApiResponse<object>(false, "漂流瓶ID无效", null));
+        }
+
+        if (string.IsNullOrEmpty(request.Content))
+        {
+            return BadRequest(new ApiResponse<object>(false, "回复内容不能为空", null));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var response = await _bottleService.AddBottleReply(userId, request);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<object>(false, "回复失败: " + ex.Message, null));
+        }
+    }
+
+    /// <summary>
+    /// 获取漂流瓶回复列表接口
+    /// </summary>
+    /// <param name="bottleId">漂流瓶ID</param>
+    /// <returns>回复列表响应</returns>
+    /// <remarks>
+    /// 请求类型: GET
+    /// 接口路径: api/Bottle/Replies/{bottleId}
+    /// 需要认证
+    /// </remarks>
+    [HttpGet("Replies/{bottleId}")]
+    public async Task<ActionResult<ApiResponse<List<object>>>> GetBottleReplies(int bottleId)
+    {
+        if (bottleId <= 0)
+        {
+            return BadRequest(new ApiResponse<List<object>>(false, "漂流瓶ID无效", null));
+        }
+
+        try
+        {
+            var response = await _bottleService.GetBottleReplies(bottleId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<List<object>>(false, "获取失败: " + ex.Message, null));
         }
     }
 }

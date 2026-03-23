@@ -76,4 +76,53 @@ public class TreeHoleService : IService
         
         return new ApiResponse(true, "树洞已删除");
     }
+
+    public async Task<ApiResponse<TreeHoleReply>> AddTreeHoleReply(int userId, TreeHoleReplyRequest request)
+    {
+        // 检查树洞是否存在
+        var treeHole = await _db.Queryable<TreeHole>()
+            .Where(t => t.Id == request.TreeHoleId && t.Status == "active" && t.ExpiredAt > DateTime.Now)
+            .FirstAsync();
+        
+        if (treeHole == null)
+        {
+            return new ApiResponse<TreeHoleReply>(false, "树洞不存在或已过期", null);
+        }
+        
+        var reply = new TreeHoleReply
+        {
+            TreeHoleId = request.TreeHoleId,
+            UserId = userId,
+            Content = request.Content
+        };
+        
+        await _db.Insertable(reply).ExecuteCommandAsync();
+        
+        return new ApiResponse<TreeHoleReply>(true, "回复成功", reply);
+    }
+
+    public async Task<ApiResponse<List<object>>> GetTreeHoleReplies(int treeHoleId)
+    {
+        var replies = await _db.Queryable<TreeHoleReply>()
+            .Includes(r => r.User)
+            .Where(r => r.TreeHoleId == treeHoleId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+        
+        var result = new List<object>();
+        foreach (var reply in replies)
+        {
+            var replyData = new
+            {
+                id = reply.Id,
+                userId = reply.UserId,
+                content = reply.Content,
+                time = reply.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+                username = "匿名"
+            };
+            result.Add(replyData);
+        }
+        
+        return new ApiResponse<List<object>>(true, "获取回复成功", result);
+    }
 }

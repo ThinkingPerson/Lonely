@@ -52,3 +52,23 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# 大型文件
+*.exe
+*.dll
+*.map
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Nginx相关
+Push/nginx-1.28.2/nginx.exe
+Push/nginx-1.28.2/html/assets/*.js
+Push/nginx-1.28.2/html/assets/*.css
+Push/nginx-1.28.2/html/assets/*.jpg
+
+# 依赖库
+LonelyApi/*.dll
+LonelyApi/runtimes/
+

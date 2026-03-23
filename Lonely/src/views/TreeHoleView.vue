@@ -70,6 +70,7 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { LeftOutlined } from '@ant-design/icons-vue'
 import request from '../utils/http'
+import { statsApi } from '../services/api'
 import ImageUpload from '../components/ImageUpload.vue'
 import VoiceUpload from '../components/VoiceUpload.vue'
 
@@ -123,6 +124,11 @@ const sendTreeHole = async () => {
     })
     
     if (response.success) {
+      // 记录树洞统计
+      statsApi.recordTreeHole().catch(error => {
+        console.error('记录树洞失败:', error)
+      })
+      
       // 显示成功消息
       setTimeout(() => {
         message.success('树洞已发出，将推送给3~5个随机用户')

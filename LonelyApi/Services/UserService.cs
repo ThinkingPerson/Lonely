@@ -100,7 +100,7 @@ public class UserService : IService
             await _db.Updateable(user).ExecuteCommandAsync();
         }
 
-        return new ApiResponse<string>(true, "上传成功", $"/uploads/avatars/{fileName}");
+        return new ApiResponse<string>(true, "上传成功", $"/public/uploads/avatars/{fileName}");
     }
 
     public async Task<ApiResponse<User>> GetProfile(int userId)

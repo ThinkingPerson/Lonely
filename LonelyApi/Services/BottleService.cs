@@ -89,4 +89,53 @@ public class BottleService : IService
 
         return new ApiResponse(true, "瓶子已删除");
     }
+
+    public async Task<ApiResponse<BottleReply>> AddBottleReply(int userId, BottleReplyRequest request)
+    {
+        // 检查瓶子是否存在
+        var bottle = await _db.Queryable<Bottle>()
+            .Where(b => b.Id == request.BottleId && b.Status == "received" && b.ExpiredAt > DateTime.Now)
+            .FirstAsync();
+
+        if (bottle == null)
+        {
+            return new ApiResponse<BottleReply>(false, "瓶子不存在或已过期", null);
+        }
+
+        var reply = new BottleReply
+        {
+            BottleId = request.BottleId,
+            UserId = userId,
+            Content = request.Content
+        };
+
+        await _db.Insertable(reply).ExecuteCommandAsync();
+
+        return new ApiResponse<BottleReply>(true, "回复成功", reply);
+    }
+
+    public async Task<ApiResponse<List<object>>> GetBottleReplies(int bottleId)
+    {
+        var replies = await _db.Queryable<BottleReply>()
+            .Includes(r => r.User)
+            .Where(r => r.BottleId == bottleId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+
+        var result = new List<object>();
+        foreach (var reply in replies)
+        {
+            var replyData = new
+            {
+                id = reply.Id,
+                userId = reply.UserId,
+                content = reply.Content,
+                time = reply.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+                username = "匿名"
+            };
+            result.Add(replyData);
+        }
+
+        return new ApiResponse<List<object>>(true, "获取回复成功", result);
+    }
 }

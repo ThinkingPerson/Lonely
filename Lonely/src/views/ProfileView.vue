@@ -7,7 +7,7 @@
       <!-- 头像和昵称 -->
       <div class="avatar-section">
         <div class="avatar-container" @click="openAvatarUpload">
-          <div v-if="avatar.startsWith('/uploads')" class="avatar avatar-image">
+          <div v-if="avatar.startsWith('/public/uploads') || avatar.startsWith('/uploads')" class="avatar avatar-image">
             <img :src="avatar" alt="头像" />
           </div>
           <div v-else class="avatar" :style="{ backgroundColor: avatar }">{{ nickname.charAt(0) }}</div>
@@ -99,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { message, Modal, Form, Input, Button } from 'ant-design-vue'
 import PageHeader from '../components/PageHeader.vue'
@@ -110,6 +110,12 @@ const router = useRouter()
 const goBack = () => {
   router.push('/main')
 }
+
+// 检查是否登录
+const isLoggedIn = computed(() => {
+  const loginType = localStorage.getItem('loginType')
+  return loginType && loginType !== 'anonymous'
+})
 
 // 状态管理
 const nickname = ref(localStorage.getItem('nickname') || '未知用户')
@@ -136,6 +142,11 @@ const validatePhone = (event) => {
 
 // 打开头像上传
 const openAvatarUpload = () => {
+  if (!isLoggedIn.value) {
+    message.error('请先登录后再上传头像')
+    router.push('/entry')
+    return
+  }
   // 创建文件输入框
   const input = document.createElement('input')
   input.type = 'file'
@@ -193,6 +204,12 @@ const handleFileUpload = async (event) => {
 
 // 更新用户资料
 const updateUserProfile = async () => {
+  if (!isLoggedIn.value) {
+    message.error('请先登录后再修改个人资料')
+    router.push('/entry')
+    return
+  }
+  
   try {
     loading.value = true
     const response = await request.post('/User/UpdateProfile', {
@@ -252,6 +269,11 @@ const getUserProfile = async () => {
 
 // 绑定账号
 const bindAccount = () => {
+  if (!isLoggedIn.value) {
+    message.error('请先登录后再绑定账号')
+    router.push('/entry')
+    return
+  }
   showBindModal.value = true
 }
 

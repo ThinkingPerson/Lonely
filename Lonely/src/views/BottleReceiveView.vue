@@ -98,14 +98,20 @@ const pickBottle = async () => {
 const sendReply = async () => {
   if (replyContent.value.trim()) {
     try {
-      // 这里需要实现回复功能，暂时模拟
-      setTimeout(() => {
+      const response = await request.post('/Bottle/Reply', {
+        BottleId: currentBottleId.value,
+        Content: replyContent.value
+      })
+      
+      if (response.success) {
         message.success('回复已发送，对方将收到你的消息')
         // 重置表单
         replyContent.value = ''
         // 返回主界面
         router.push('/main')
-      }, 1000)
+      } else {
+        message.error('回复失败: ' + (response.message || '未知错误'))
+      }
     } catch (error) {
       console.error('回复失败:', error)
       message.error('回复失败，请检查网络连接')

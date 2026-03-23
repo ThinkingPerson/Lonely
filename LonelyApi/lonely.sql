@@ -252,4 +252,67 @@ INSERT INTO `users` VALUES (4, '750702b1lFyvClypEsCOoAZ1', '安静的倾听者16
 INSERT INTO `users` VALUES (5, '30c46bbba15e41a4bb04e67f1298c777', '活泼的梦想家559', '#FF6B6B', '18860423687', 'quick', '2026-03-09 20:14:07', '1900-01-01 00:00:00', '1900-01-01 00:00:00', '423687');
 INSERT INTO `users` VALUES (6, 'e3fd6dde12554001b7f0b10859a39e4f', '自由的创造者918', '#45B7D1', '', 'quick', '2026-03-09 19:32:26', '1900-01-01 00:00:00', '1900-01-01 00:00:00', '');
 
+-- ----------------------------
+-- Table structure for treeholereplies
+-- ----------------------------
+DROP TABLE IF EXISTS `treeholereplies`;
+CREATE TABLE `treeholereplies`  (
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `TreeHoleId` int NOT NULL,
+  `UserId` int NOT NULL,
+  `Content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Id`) USING BTREE,
+  INDEX `TreeHoleId`(`TreeHoleId` ASC) USING BTREE,
+  INDEX `UserId`(`UserId` ASC) USING BTREE,
+  CONSTRAINT `treeholereplies_ibfk_1` FOREIGN KEY (`TreeHoleId`) REFERENCES `treeholes` (`Id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `treeholereplies_ibfk_2` FOREIGN KEY (`UserId`) REFERENCES `users` (`Id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of treeholereplies
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for bottlereplies
+-- ----------------------------
+DROP TABLE IF EXISTS `bottlereplies`;
+CREATE TABLE `bottlereplies`  (
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `BottleId` int NOT NULL,
+  `UserId` int NOT NULL,
+  `Content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Id`) USING BTREE,
+  INDEX `BottleId`(`BottleId` ASC) USING BTREE,
+  INDEX `UserId`(`UserId` ASC) USING BTREE,
+  CONSTRAINT `bottlereplies_ibfk_1` FOREIGN KEY (`BottleId`) REFERENCES `bottles` (`Id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `bottlereplies_ibfk_2` FOREIGN KEY (`UserId`) REFERENCES `users` (`Id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of bottlereplies
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for stats
+-- ----------------------------
+DROP TABLE IF EXISTS `stats`;
+CREATE TABLE `stats`  (
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `Date` date NOT NULL,
+  `VisitCount` int NOT NULL DEFAULT 0,
+  `BottleCount` int NOT NULL DEFAULT 0,
+  `TreeHoleCount` int NOT NULL DEFAULT 0,
+  `PostCount` int NOT NULL DEFAULT 0,
+  `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Id`) USING BTREE,
+  UNIQUE INDEX `uk_date`(`Date` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of stats
+-- ----------------------------
+
 SET FOREIGN_KEY_CHECKS = 1;

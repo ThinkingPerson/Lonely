@@ -131,6 +131,8 @@
       <span class="link" @click="goToReadme">阅读说明</span>
       <span class="link-divider">·</span>
       <span class="link" @click="goToDisclaimer">免责声明</span>
+      <span v-if="localStorage.getItem('phone') === '18860423687'" class="link-divider">·</span>
+      <span v-if="localStorage.getItem('phone') === '18860423687'" class="link" @click="goToStatistics">数据统计</span>
     </div>
   </div>
 </div>
@@ -141,7 +143,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { SettingOutlined, MessageOutlined, TeamOutlined, DeleteOutlined, UserOutlined, FireOutlined, SmileOutlined } from '@ant-design/icons-vue'
-import { checkInApi } from '../services/api'
+import { checkInApi, statsApi } from '../services/api'
 
 const router = useRouter()
 const nickname = ref('')
@@ -166,6 +168,11 @@ const defaultStatuses = [
 ]
 
 onMounted(() => {
+  // 记录网站访问
+  statsApi.recordVisit().catch(error => {
+    console.error('记录访问失败:', error)
+  })
+  
   // 从本地存储获取用户信息
   const storedNickname = localStorage.getItem('nickname')
   const storedAvatar = localStorage.getItem('avatar')
@@ -191,15 +198,33 @@ onMounted(() => {
 
 // 检查今日是否已签到
 const checkIfCheckedIn = async () => {
-  try {
-    const response = await checkInApi.getStatus()
-    if (response.success) {
-      isCheckedIn.value = response.data.isCheckedIn
-      todayStatus.value = response.data.status || ''
+  const loginType = localStorage.getItem('loginType')
+  
+  if (loginType && loginType !== 'anonymous') {
+    // 登录用户，调用后端API
+    try {
+      const response = await checkInApi.getStatus()
+      if (response.success) {
+        isCheckedIn.value = response.data.isCheckedIn
+        todayStatus.value = response.data.status || ''
+      }
+    } catch (error) {
+      console.error('获取签到状态失败:', error)
+      // 失败时不更新页面状态，保持原样
     }
-  } catch (error) {
-    console.error('获取签到状态失败:', error)
-    // 失败时不更新页面状态，保持原样
+  } else {
+    // 匿名用户，从本地存储获取
+    const today = new Date().toDateString()
+    const lastCheckInDate = localStorage.getItem('lastCheckInDate')
+    const lastCheckInStatus = localStorage.getItem('lastCheckInStatus')
+    
+    if (lastCheckInDate === today) {
+      isCheckedIn.value = true
+      todayStatus.value = lastCheckInStatus || ''
+    } else {
+      isCheckedIn.value = false
+      todayStatus.value = ''
+    }
   }
 }
 
@@ -213,25 +238,48 @@ const selectStatus = (status) => {
 const checkIn = async () => {
   if (!selectedStatus.value) return
   
+  const loginType = localStorage.getItem('loginType')
+  
   try {
     loading.value = true
-    const response = await checkInApi.checkIn({
-      status: selectedStatus.value
-    })
     
-    if (response.success) {
-      // 更新状态
-      isCheckedIn.value = true
-      todayStatus.value = selectedStatus.value
+    // if (loginType && loginType !== 'anonymous') {
+      // 登录用户，调用后端API
+      const response = await checkInApi.checkIn({
+        status: selectedStatus.value
+      })
       
-      // 显示签到动画
-      showCheckInAnimation.value = true
-      setTimeout(() => {
-        showCheckInAnimation.value = false
-      }, 2000)
-    } else {
-      message.error('签到失败：' + response.message)
-    }
+      if (response.success) {
+        // 更新状态
+        isCheckedIn.value = true
+        todayStatus.value = selectedStatus.value
+        
+        // 显示签到动画
+        showCheckInAnimation.value = true
+        setTimeout(() => {
+          showCheckInAnimation.value = false
+        }, 2000)
+      } else {
+        message.error('签到失败：' + response.message)
+      }
+    // } else {
+    //   // 匿名用户，存储在本地
+    //   const today = new Date().toDateString()
+    //   localStorage.setItem('lastCheckInDate', today)
+    //   localStorage.setItem('lastCheckInStatus', selectedStatus.value)
+      
+    //   // 更新状态
+    //   isCheckedIn.value = true
+    //   todayStatus.value = selectedStatus.value
+      
+    //   // 显示签到动画
+    //   showCheckInAnimation.value = true
+    //   setTimeout(() => {
+    //     showCheckInAnimation.value = false
+    //   }, 2000)
+      
+    //   message.success('签到成功')
+    // }
   } catch (error) {
     console.error('签到失败:', error)
     // 失败时不更新页面状态，保持原样
@@ -282,6 +330,10 @@ const goToReadme = () => {
 
 const goToDisclaimer = () => {
   router.push('/disclaimer')
+}
+
+const goToStatistics = () => {
+  router.push('/statistics')
 }
 </script>
 

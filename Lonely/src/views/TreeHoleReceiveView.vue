@@ -10,29 +10,38 @@
     </div>
     
     <div class="content">
+      <!-- 加载状态 -->
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>加载中...</p>
+      </div>
+      
       <!-- 树洞内容 -->
-      <div class="treehole-content">
+      <div v-else class="treehole-content">
         <div class="treehole-header">
           <div class="avatar">匿名</div>
-          <span class="time">10分钟前</span>
+          <span class="time">{{ formatTime(treeholeData.createdAt) }}</span>
         </div>
         <div class="treehole-body">
-          <p>{{ treeholeContent }}</p>
+          <p>{{ treeholeData.content }}</p>
           <!-- 图片显示 -->
-          <div v-if="treeholeImage" class="treehole-media">
-            <img :src="treeholeImage" alt="Treehole image" class="treehole-image" />
+          <div v-if="treeholeData.imageUrl" class="treehole-media">
+            <img :src="treeholeData.imageUrl" alt="Treehole image" class="treehole-image" />
           </div>
           <!-- 语音显示 -->
-          <div v-if="treeholeVoice" class="treehole-media">
-            <audio :src="treeholeVoice" controls class="treehole-audio"></audio>
+          <div v-if="treeholeData.voiceUrl" class="treehole-media">
+            <audio :src="treeholeData.voiceUrl" controls class="treehole-audio"></audio>
           </div>
         </div>
       </div>
       
       <!-- 回复列表 -->
-      <div class="replies">
+      <div v-if="!loading" class="replies">
         <h3>回声</h3>
-        <div class="reply-item" v-for="(reply, index) in replies" :key="index">
+        <div v-if="replies.length === 0" class="no-replies">
+          <p>还没有回声，快来成为第一个回应的人吧</p>
+        </div>
+        <div v-else class="reply-item" v-for="(reply, index) in replies" :key="index">
           <div class="avatar">匿名</div>
           <div class="reply-content">
             <p>{{ reply.content }}</p>
@@ -42,15 +51,15 @@
       </div>
       
       <!-- 回复输入 -->
-      <div class="reply-input">
+      <div v-if="!loading" class="reply-input">
         <textarea 
           v-model="replyContent"
           placeholder="写下你的回声..."
           maxlength="100"
           rows="3"
         ></textarea>
-        <button class="btn btn-primary reply-btn" @click="sendReply">
-          发送回声
+        <button class="btn btn-primary reply-btn" @click="sendReply" :disabled="sending">
+          {{ sending ? '发送中...' : '发送回声' }}
         </button>
       </div>
     </div>
@@ -63,39 +72,111 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import request from '../utils/http'
 
 const router = useRouter()
 
-const treeholeContent = ref('今天天气真好，但是我有点孤独。想找个人说说话，但是又不想被认识的人知道。这就是我使用这个匿名App的原因吧。')
-const treeholeImage = ref('')
-const treeholeVoice = ref('')
-
-const replies = ref([
-  { content: '我也有同感，有时候就是想和陌生人聊聊', time: '5分钟前' },
-  { content: '天气确实不错，出去走走可能会好一点', time: '3分钟前' }
-])
-
+const treeholeData = ref({
+  id: 0,
+  content: '',
+  imageUrl: '',
+  voiceUrl: '',
+  createdAt: ''
+})
+const replies = ref([])
 const replyContent = ref('')
+const loading = ref(true)
+const sending = ref(false)
 
 const goBack = () => {
   router.push('/main')
 }
 
-const sendReply = () => {
-  if (replyContent.value.trim()) {
-    // 模拟发送回复
-    replies.value.push({
-      content: replyContent.value,
-      time: '刚刚'
-    })
-    
-    replyContent.value = ''
-    message.success('回复已发送，将匿名展示')
+const formatTime = (timeString) => {
+  if (!timeString) return ''
+  const date = new Date(timeString)
+  const now = new Date()
+  const diff = now - date
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+  
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  if (hours < 24) return `${hours}小时前`
+  if (days < 7) return `${days}天前`
+  return date.toLocaleDateString()
+}
+
+const getRandomTreeHole = async () => {
+  try {
+    loading.value = true
+    const response = await request.get('/TreeHole/Random')
+    if (response.success) {
+      treeholeData.value = response.data
+      // 获取回复列表
+      await getTreeHoleReplies(treeholeData.value.id)
+    } else {
+      message.info('暂无树洞')
+      router.push('/treehole')
+    }
+  } catch (error) {
+    console.error('获取树洞失败:', error)
+    message.error('获取树洞失败，请检查网络连接')
+  } finally {
+    loading.value = false
   }
 }
+
+const getTreeHoleReplies = async (treeHoleId) => {
+  try {
+    const response = await request.get(`/TreeHole/Replies/${treeHoleId}`)
+    if (response.success) {
+      replies.value = response.data
+    }
+  } catch (error) {
+    console.error('获取回复失败:', error)
+  }
+}
+
+const sendReply = async () => {
+  if (!replyContent.value.trim()) return
+  
+  try {
+    sending.value = true
+    const response = await request.post('/TreeHole/Reply', {
+      TreeHoleId: treeholeData.value.id,
+      Content: replyContent.value
+    })
+    
+    if (response.success) {
+      const newReply = {
+        id: response.data.id,
+        userId: response.data.userId,
+        content: response.data.content,
+        time: '刚刚',
+        username: '匿名'
+      }
+      replies.value.push(newReply)
+      replyContent.value = ''
+      message.success('回复已发送，将匿名展示')
+    } else {
+      message.error('回复失败: ' + (response.message || '未知错误'))
+    }
+  } catch (error) {
+    console.error('回复失败:', error)
+    message.error('回复失败，请检查网络连接')
+  } finally {
+    sending.value = false
+  }
+}
+
+onMounted(() => {
+  getRandomTreeHole()
+})
 </script>
 
 <style scoped>
@@ -221,5 +302,44 @@ const sendReply = () => {
 .tips {
   text-align: center;
   margin-top: 20px;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(155, 89, 182, 0.2);
+  border-left-color: #9b59b6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-container p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.no-replies {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 14px;
 }
 </style>

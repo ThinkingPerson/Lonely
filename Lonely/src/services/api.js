@@ -46,7 +46,51 @@ export const checkInApi = {
   }
 }
 
+// 统计相关API
+export const statsApi = {
+  // 记录网站访问
+  recordVisit: () => {
+    return request.post('/Stats/RecordVisit')
+  },
+  
+  // 记录扔瓶子
+  recordBottle: () => {
+    return request.post('/Stats/RecordBottle')
+  },
+  
+  // 记录树洞
+  recordTreeHole: () => {
+    return request.post('/Stats/RecordTreeHole')
+  },
+  
+  // 记录动态
+  recordPost: () => {
+    return request.post('/Stats/RecordPost')
+  },
+  
+  // 获取每日统计数据
+  getDailyStats: (days = 30) => {
+    return request.get('/Stats/Daily', { days })
+  },
+  
+  // 获取每周统计数据
+  getWeeklyStats: (weeks = 12) => {
+    return request.get('/Stats/Weekly', { weeks })
+  },
+  
+  // 获取每月统计数据
+  getMonthlyStats: (months = 6) => {
+    return request.get('/Stats/Monthly', { months })
+  },
+  
+  // 获取统计趋势数据
+  getTrendStats: (days = 30) => {
+    return request.get('/Stats/Trend', { days })
+  }
+}
+
 export default {
   postApi,
-  checkInApi
+  checkInApi,
+  statsApi
 }

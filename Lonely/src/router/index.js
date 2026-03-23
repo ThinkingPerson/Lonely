@@ -112,6 +112,13 @@ const routes = [
     meta: {
       title: '用户信息 - 查看用户详情'
     }
+  },
+  {
+    path: '/statistics',
+    component: () => import('../views/StatisticsView.vue'),
+    meta: {
+      title: '数据统计 - 网站访问和功能使用统计'
+    }
   }
 ]
 
