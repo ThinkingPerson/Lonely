@@ -68,24 +68,24 @@ export const statsApi = {
     return request.post('/Stats/RecordPost')
   },
   
-  // 获取每日统计数据
-  getDailyStats: (days = 30) => {
-    return request.get('/Stats/Daily', { days })
-  },
-  
-  // 获取每周统计数据
-  getWeeklyStats: (weeks = 12) => {
-    return request.get('/Stats/Weekly', { weeks })
-  },
-  
-  // 获取每月统计数据
-  getMonthlyStats: (months = 6) => {
-    return request.get('/Stats/Monthly', { months })
-  },
-  
   // 获取统计趋势数据
   getTrendStats: (days = 30) => {
     return request.get('/Stats/Trend', { days })
+  },
+  
+  // 获取用户统计趋势数据
+  getUserTrendStats: (days = 30) => {
+    return request.get('/Stats/UserTrend', { days })
+  },
+  
+  // 获取所有用户统计数据
+  getAllUsersStats: (days = 7) => {
+    return request.get('/Stats/AllUsers', { days })
+  },
+  
+  // 获取每日详细数据
+  getDailyDetails: (date = null) => {
+    return request.get('/Stats/DailyDetails', { date })
   }
 }
 

@@ -12,15 +12,6 @@
       
       <!-- 统计内容 -->
       <div v-else>
-        <!-- 时间范围选择 -->
-        <div class="time-range-selector">
-          <ButtonGroup>
-            <Button :type="timeRange === 'day' ? 'primary' : 'default'" @click="timeRange = 'day'">日</Button>
-            <Button :type="timeRange === 'week' ? 'primary' : 'default'" @click="timeRange = 'week'">周</Button>
-            <Button :type="timeRange === 'month' ? 'primary' : 'default'" @click="timeRange = 'month'">月</Button>
-          </ButtonGroup>
-        </div>
-        
         <!-- 统计卡片 -->
         <div class="statistics-cards">
           <div class="card">
@@ -53,10 +44,16 @@
           </div>
         </div>
         
-        <!-- 详细数据列表 -->
+        <!-- 所有用户统计数据 -->
         <div class="data-table">
-          <h3>每日详细数据</h3>
-          <Table :columns="columns" :data-source="tableData" />
+          <h3>所有用户统计数据</h3>
+          <Table :columns="userColumns" :data-source="userData" />
+        </div>
+        
+        <!-- 每日详细数据 -->
+        <div class="data-table">
+          <h3>每日详细操作记录</h3>
+          <Table :columns="dailyColumns" :data-source="dailyData" />
         </div>
       </div>
     </div>
@@ -64,9 +61,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button, ButtonGroup, Table, message } from 'ant-design-vue'
+import { Table, message } from 'ant-design-vue'
 import * as echarts from 'echarts'
 import { statsApi } from '../services/api'
 import PageHeader from '../components/PageHeader.vue'
@@ -78,9 +75,6 @@ const hasAccess = computed(() => {
   const phone = localStorage.getItem('phone')
   return phone === '18860423687'
 })
-
-// 时间范围
-const timeRange = ref('day')
 
 // 统计数据
 const totalVisits = ref(0)
@@ -102,41 +96,70 @@ const visitChartRef = ref(null)
 const functionChartRef = ref(null)
 
 // 表格数据
-const columns = [
+const userColumns = [
+  {
+    title: '用户ID',
+    dataIndex: 'userId',
+    key: 'userId'
+  },
+  {
+    title: '用户昵称',
+    dataIndex: 'nickname',
+    key: 'nickname'
+  },
   {
     title: '日期',
     dataIndex: 'date',
     key: 'date'
   },
   {
-    title: '访问次数',
-    dataIndex: 'visits',
-    key: 'visits'
+    title: '操作类型',
+    dataIndex: 'operationType',
+    key: 'operationType'
   },
   {
-    title: '扔瓶子次数',
-    dataIndex: 'bottles',
-    key: 'bottles'
-  },
-  {
-    title: '树洞次数',
-    dataIndex: 'treeHoles',
-    key: 'treeHoles'
-  },
-  {
-    title: '动态发布次数',
-    dataIndex: 'posts',
-    key: 'posts'
+    title: '操作次数',
+    dataIndex: 'count',
+    key: 'count'
   }
 ]
 
-const tableData = ref([
-  { key: '1', date: '2026-03-23', visits: 120, bottles: 30, treeHoles: 25, posts: 15 },
-  { key: '2', date: '2026-03-22', visits: 110, bottles: 28, treeHoles: 22, posts: 12 },
-  { key: '3', date: '2026-03-21', visits: 130, bottles: 32, treeHoles: 28, posts: 18 },
-  { key: '4', date: '2026-03-20', visits: 95, bottles: 25, treeHoles: 20, posts: 10 },
-  { key: '5', date: '2026-03-19', visits: 105, bottles: 27, treeHoles: 23, posts: 14 }
-])
+const userData = ref([])
+
+const dailyColumns = [
+  {
+    title: 'ID',
+    dataIndex: 'id',
+    key: 'id'
+  },
+  {
+    title: '用户ID',
+    dataIndex: 'userId',
+    key: 'userId'
+  },
+  {
+    title: '用户昵称',
+    dataIndex: 'nickname',
+    key: 'nickname'
+  },
+  {
+    title: '操作类型',
+    dataIndex: 'operationType',
+    key: 'operationType'
+  },
+  {
+    title: '内容',
+    dataIndex: 'content',
+    key: 'content'
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'createdAt',
+    key: 'createdAt'
+  }
+]
+
+const dailyData = ref([])
 
 // 返回按钮
 const goBack = () => {
@@ -259,108 +282,40 @@ const initCharts = () => {
 // 加载数据
 const loadData = async () => {
   try {
-    // 根据时间范围获取数据
-    if (timeRange.value === 'day') {
-      // 获取每日统计数据
-      const dailyResponse = await statsApi.getDailyStats(30)
-      if (dailyResponse.success) {
-        const dailyData = dailyResponse.data
-        // 计算总计
-        totalVisits.value = dailyData.reduce((sum, item) => sum + item.visitCount, 0)
-        totalBottles.value = dailyData.reduce((sum, item) => sum + item.bottleCount, 0)
-        totalTreeHoles.value = dailyData.reduce((sum, item) => sum + item.treeHoleCount, 0)
-        totalPosts.value = dailyData.reduce((sum, item) => sum + item.postCount, 0)
-        
-        // 更新表格数据
-        tableData.value = dailyData.map((item, index) => ({
-          key: (index + 1).toString(),
-          date: item.date,
-          visits: item.visitCount,
-          bottles: item.bottleCount,
-          treeHoles: item.treeHoleCount,
-          posts: item.postCount
-        }))
-      }
-      
-      // 获取趋势数据
-      const trendResponse = await statsApi.getTrendStats(30)
-      if (trendResponse.success) {
-        trendData.value = trendResponse.data
-        initCharts()
-      }
-    } else if (timeRange.value === 'week') {
-      // 获取每周统计数据
-      const weeklyResponse = await statsApi.getWeeklyStats(12)
-      if (weeklyResponse.success) {
-        const weeklyData = weeklyResponse.data
-        // 计算总计
-        totalVisits.value = weeklyData.reduce((sum, item) => sum + item.visitCount, 0)
-        totalBottles.value = weeklyData.reduce((sum, item) => sum + item.bottleCount, 0)
-        totalTreeHoles.value = weeklyData.reduce((sum, item) => sum + item.treeHoleCount, 0)
-        totalPosts.value = weeklyData.reduce((sum, item) => sum + item.postCount, 0)
-        
-        // 更新表格数据
-        tableData.value = weeklyData.map((item, index) => ({
-          key: (index + 1).toString(),
-          date: item.week,
-          visits: item.visitCount,
-          bottles: item.bottleCount,
-          treeHoles: item.treeHoleCount,
-          posts: item.postCount
-        }))
-        
-        // 构建趋势数据
-        trendData.value = {
-          dates: weeklyData.map(item => item.week),
-          visitData: weeklyData.map(item => item.visitCount),
-          bottleData: weeklyData.map(item => item.bottleCount),
-          treeHoleData: weeklyData.map(item => item.treeHoleCount),
-          postData: weeklyData.map(item => item.postCount)
-        }
-        initCharts()
-      }
-    } else if (timeRange.value === 'month') {
-      // 获取每月统计数据
-      const monthlyResponse = await statsApi.getMonthlyStats(6)
-      if (monthlyResponse.success) {
-        const monthlyData = monthlyResponse.data
-        // 计算总计
-        totalVisits.value = monthlyData.reduce((sum, item) => sum + item.visitCount, 0)
-        totalBottles.value = monthlyData.reduce((sum, item) => sum + item.bottleCount, 0)
-        totalTreeHoles.value = monthlyData.reduce((sum, item) => sum + item.treeHoleCount, 0)
-        totalPosts.value = monthlyData.reduce((sum, item) => sum + item.postCount, 0)
-        
-        // 更新表格数据
-        tableData.value = monthlyData.map((item, index) => ({
-          key: (index + 1).toString(),
-          date: item.month,
-          visits: item.visitCount,
-          bottles: item.bottleCount,
-          treeHoles: item.treeHoleCount,
-          posts: item.postCount
-        }))
-        
-        // 构建趋势数据
-        trendData.value = {
-          dates: monthlyData.map(item => item.month),
-          visitData: monthlyData.map(item => item.visitCount),
-          bottleData: monthlyData.map(item => item.bottleCount),
-          treeHoleData: monthlyData.map(item => item.treeHoleCount),
-          postData: monthlyData.map(item => item.postCount)
-        }
-        initCharts()
-      }
+    // 获取趋势数据
+    const trendResponse = await statsApi.getTrendStats(30)
+    if (trendResponse.success) {
+      trendData.value = trendResponse.data
+      // 计算总计
+      totalVisits.value = trendData.value.visitData.reduce((sum, count) => sum + count, 0)
+      totalBottles.value = trendData.value.bottleData.reduce((sum, count) => sum + count, 0)
+      totalTreeHoles.value = trendData.value.treeHoleData.reduce((sum, count) => sum + count, 0)
+      totalPosts.value = trendData.value.postData.reduce((sum, count) => sum + count, 0)
+      initCharts()
+    }
+    
+    // 获取所有用户统计数据
+    const allUsersResponse = await statsApi.getAllUsersStats(7)
+    if (allUsersResponse.success) {
+      userData.value = allUsersResponse.data.map((item, index) => ({
+        key: (index + 1).toString(),
+        ...item
+      }))
+    }
+    
+    // 获取每日详细数据
+    const dailyDetailsResponse = await statsApi.getDailyDetails()
+    if (dailyDetailsResponse.success) {
+      dailyData.value = dailyDetailsResponse.data.map((item, index) => ({
+        key: (index + 1).toString(),
+        ...item
+      }))
     }
   } catch (error) {
     console.error('加载统计数据失败:', error)
     message.error('加载统计数据失败，请稍后重试')
   }
 }
-
-// 监听时间范围变化
-watch(timeRange, (newRange) => {
-  loadData()
-})
 
 onMounted(() => {
   if (hasAccess.value) {
@@ -403,10 +358,7 @@ onMounted(() => {
   margin-bottom: 30px;
 }
 
-.time-range-selector {
-  margin-bottom: 30px;
-  text-align: right;
-}
+
 
 .statistics-cards {
   display: grid;
