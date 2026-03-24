@@ -32,6 +32,16 @@
           </div>
         </div>
         
+        <!-- 时间范围选择 -->
+        <div class="time-range">
+          <h3>时间范围</h3>
+          <Radio.Group v-model="timeRange" @change="handleTimeRangeChange">
+            <Radio.Button value="7">7天</Radio.Button>
+            <Radio.Button value="30">30天</Radio.Button>
+            <Radio.Button value="90">90天</Radio.Button>
+          </Radio.Group>
+        </div>
+        
         <!-- 折线图 -->
         <div class="charts">
           <div class="chart-container">
@@ -61,19 +71,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
-import { Table, message } from 'ant-design-vue'
+import { Table, message, Radio } from 'ant-design-vue'
 import * as echarts from 'echarts'
 import { statsApi } from '../services/api'
 import PageHeader from '../components/PageHeader.vue'
 
 const router = useRouter()
 
-// 权限控制
+// 注入全局用户状态
+const userState = inject('userState')
+
+// 检查是否为管理员账号
 const hasAccess = computed(() => {
-  const phone = localStorage.getItem('phone')
-  return phone === '18860423687'
+  return userState.value.userInfo && userState.value.userInfo.phone === '18860423687'
 })
 
 // 统计数据
@@ -90,6 +102,9 @@ const trendData = ref({
   treeHoleData: [],
   postData: []
 })
+
+// 时间范围
+const timeRange = ref('7')
 
 // 图表引用
 const visitChartRef = ref(null)
@@ -279,11 +294,18 @@ const initCharts = () => {
   })
 }
 
+// 时间范围变化处理
+const handleTimeRangeChange = () => {
+  loadData()
+}
+
 // 加载数据
 const loadData = async () => {
   try {
+    const days = parseInt(timeRange.value)
+    
     // 获取趋势数据
-    const trendResponse = await statsApi.getTrendStats(30)
+    const trendResponse = await statsApi.getTrendStats(days)
     if (trendResponse.success) {
       trendData.value = trendResponse.data
       // 计算总计
@@ -295,7 +317,7 @@ const loadData = async () => {
     }
     
     // 获取所有用户统计数据
-    const allUsersResponse = await statsApi.getAllUsersStats(7)
+    const allUsersResponse = await statsApi.getAllUsersStats(days)
     if (allUsersResponse.success) {
       userData.value = allUsersResponse.data.map((item, index) => ({
         key: (index + 1).toString(),
@@ -365,6 +387,21 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
+}
+
+.time-range {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.time-range h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 16px;
+  font-weight: 600;
 }
 
 .card {
@@ -488,6 +525,45 @@ onMounted(() => {
   
   .card-value {
     font-size: 24px;
+  }
+  
+  .time-range {
+    padding: 16px;
+  }
+  
+  .data-table {
+    padding: 16px;
+    overflow-x: auto;
+  }
+  
+  .data-table h3 {
+    font-size: 14px;
+  }
+  
+  /* 表格响应式样式 */
+  .ant-table {
+    font-size: 12px;
+  }
+  
+  .ant-table-thead > tr > th {
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  .ant-table-tbody > tr > td {
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  /* 隐藏部分列以适应手机屏幕 */
+  .ant-table-tbody > tr > td:nth-child(3),
+  .ant-table-thead > tr > th:nth-child(3) {
+    display: none;
+  }
+  
+  .ant-table-tbody > tr > td:nth-child(6),
+  .ant-table-thead > tr > th:nth-child(6) {
+    display: none;
   }
 }
 </style>

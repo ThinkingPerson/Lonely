@@ -501,6 +501,7 @@ const generateRandomAvatar = () => {
   justify-content: center;
   z-index: 1000;
   backdrop-filter: blur(5px);
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-content {
@@ -511,6 +512,16 @@ const generateRandomAvatar = () => {
   max-width: 400px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   animation: modalFadeIn 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 防止输入框自动放大 */
+input[type="tel"], input[type="password"] {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 @keyframes modalFadeIn {

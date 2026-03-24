@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import PageHeader from '../components/PageHeader.vue'
@@ -83,11 +83,14 @@ import ImageUpload from '../components/ImageUpload.vue'
 import VoiceUpload from '../components/VoiceUpload.vue'
 import { postApi, statsApi } from '../services/api'
 
+// 注入全局用户状态
+const userState = inject('userState')
+
 const router = useRouter()
 
 // 用户信息
-const userNickname = ref(localStorage.getItem('nickname') || '神秘用户')
-const userAvatar = ref(localStorage.getItem('avatar') || '#FF6B6B')
+const userNickname = ref('神秘用户')
+const userAvatar = ref('#FF6B6B')
 
 // 动态内容
 const postContent = ref('')
@@ -135,8 +138,7 @@ const removeAudio = () => {
 
 // 检查是否登录
 const isLoggedIn = computed(() => {
-  const loginType = localStorage.getItem('loginType')
-  return loginType && loginType !== 'anonymous'
+  return userState.value.isLoggedIn
 })
 
 // 发布动态
@@ -179,6 +181,13 @@ const publishPost = async () => {
 
 // 初始化
 onMounted(() => {
+  // 从全局用户状态获取用户信息
+  if (userState.value.isLoggedIn && userState.value.userInfo) {
+    const userInfo = userState.value.userInfo
+    userNickname.value = userInfo.nickname || '神秘用户'
+    userAvatar.value = userInfo.avatar || '#FF6B6B'
+  }
+  
   // 检查登录状态
   if (!isLoggedIn.value) {
     message.info('请登录后发布动态')

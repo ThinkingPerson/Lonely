@@ -131,19 +131,27 @@
       <span class="link" @click="goToReadme">阅读说明</span>
       <span class="link-divider">·</span>
       <span class="link" @click="goToDisclaimer">免责声明</span>
-      <span v-if="localStorage.getItem('phone') === '18860423687'" class="link-divider">·</span>
-      <span v-if="localStorage.getItem('phone') === '18860423687'" class="link" @click="goToStatistics">数据统计</span>
+      <span v-if="isAdmin" class="link-divider">·</span>
+      <span v-if="isAdmin" class="link" @click="goToStatistics">数据统计</span>
     </div>
   </div>
 </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { SettingOutlined, MessageOutlined, TeamOutlined, DeleteOutlined, UserOutlined, FireOutlined, SmileOutlined } from '@ant-design/icons-vue'
 import { checkInApi, statsApi } from '../services/api'
+
+// 注入全局用户状态
+const userState = inject('userState')
+
+// 检查是否为管理员账号
+const isAdmin = computed(() => {
+  return userState.value.userInfo && userState.value.userInfo.phone === '18860423687'
+})
 
 const router = useRouter()
 const nickname = ref('')
@@ -173,24 +181,18 @@ onMounted(() => {
     console.error('记录访问失败:', error)
   })
   
-  // 从本地存储获取用户信息
-  const storedNickname = localStorage.getItem('nickname')
-  const storedAvatar = localStorage.getItem('avatar')
-  const loginType = localStorage.getItem('loginType')
-  
-  if (storedNickname) {
-    nickname.value = storedNickname
+  // 从全局用户状态获取用户信息
+  if (userState.value.isLoggedIn && userState.value.userInfo) {
+    const userInfo = userState.value.userInfo
+    nickname.value = userInfo.nickname || '神秘用户'
+    avatar.value = userInfo.avatar || '#007aff'
+    hasLoggedIn.value = true
   } else {
-    // 生成默认昵称
+    // 未登录用户
     nickname.value = '神秘用户'
+    avatar.value = '#007aff'
+    hasLoggedIn.value = false
   }
-  
-  if (storedAvatar) {
-    avatar.value = storedAvatar
-  }
-  
-  // 检查是否已登录
-  hasLoggedIn.value = !!loginType
   
   // 检查今日是否已签到
   checkIfCheckedIn()
@@ -198,9 +200,7 @@ onMounted(() => {
 
 // 检查今日是否已签到
 const checkIfCheckedIn = async () => {
-  const loginType = localStorage.getItem('loginType')
-  
-  if (loginType && loginType !== 'anonymous') {
+  if (userState.value.isLoggedIn) {
     // 登录用户，调用后端API
     try {
       const response = await checkInApi.getStatus()
@@ -214,14 +214,20 @@ const checkIfCheckedIn = async () => {
     }
   } else {
     // 匿名用户，从本地存储获取
-    const today = new Date().toDateString()
-    const lastCheckInDate = localStorage.getItem('lastCheckInDate')
-    const lastCheckInStatus = localStorage.getItem('lastCheckInStatus')
-    
-    if (lastCheckInDate === today) {
-      isCheckedIn.value = true
-      todayStatus.value = lastCheckInStatus || ''
-    } else {
+    try {
+      const today = new Date().toDateString()
+      const lastCheckInDate = localStorage.getItem('lastCheckInDate')
+      const lastCheckInStatus = localStorage.getItem('lastCheckInStatus')
+      
+      if (lastCheckInDate === today) {
+        isCheckedIn.value = true
+        todayStatus.value = lastCheckInStatus || ''
+      } else {
+        isCheckedIn.value = false
+        todayStatus.value = ''
+      }
+    } catch (error) {
+      console.error('获取本地存储失败:', error)
       isCheckedIn.value = false
       todayStatus.value = ''
     }
@@ -238,12 +244,10 @@ const selectStatus = (status) => {
 const checkIn = async () => {
   if (!selectedStatus.value) return
   
-  const loginType = localStorage.getItem('loginType')
-  
   try {
     loading.value = true
     
-    // if (loginType && loginType !== 'anonymous') {
+    if (userState.value.isLoggedIn) {
       // 登录用户，调用后端API
       const response = await checkInApi.checkIn({
         status: selectedStatus.value
@@ -262,24 +266,29 @@ const checkIn = async () => {
       } else {
         message.error('签到失败：' + response.message)
       }
-    // } else {
-    //   // 匿名用户，存储在本地
-    //   const today = new Date().toDateString()
-    //   localStorage.setItem('lastCheckInDate', today)
-    //   localStorage.setItem('lastCheckInStatus', selectedStatus.value)
-      
-    //   // 更新状态
-    //   isCheckedIn.value = true
-    //   todayStatus.value = selectedStatus.value
-      
-    //   // 显示签到动画
-    //   showCheckInAnimation.value = true
-    //   setTimeout(() => {
-    //     showCheckInAnimation.value = false
-    //   }, 2000)
-      
-    //   message.success('签到成功')
-    // }
+    } else {
+      // 匿名用户，存储在本地
+      try {
+        const today = new Date().toDateString()
+        localStorage.setItem('lastCheckInDate', today)
+        localStorage.setItem('lastCheckInStatus', selectedStatus.value)
+        
+        // 更新状态
+        isCheckedIn.value = true
+        todayStatus.value = selectedStatus.value
+        
+        // 显示签到动画
+        showCheckInAnimation.value = true
+        setTimeout(() => {
+          showCheckInAnimation.value = false
+        }, 2000)
+        
+        message.success('签到成功')
+      } catch (localError) {
+        console.error('存储本地签到信息失败:', localError)
+        message.error('签到失败，请稍后重试')
+      }
+    }
   } catch (error) {
     console.error('签到失败:', error)
     // 失败时不更新页面状态，保持原样

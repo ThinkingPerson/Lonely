@@ -99,11 +99,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { message, Modal, Form, Input, Button } from 'ant-design-vue'
 import PageHeader from '../components/PageHeader.vue'
 import request from '../utils/http'
+
+// 注入全局用户状态
+const userState = inject('userState')
 
 const router = useRouter()
 
@@ -113,17 +116,16 @@ const goBack = () => {
 
 // 检查是否登录
 const isLoggedIn = computed(() => {
-  const loginType = localStorage.getItem('loginType')
-  return loginType && loginType !== 'anonymous'
+  return userState.value.isLoggedIn
 })
 
 // 状态管理
-const nickname = ref(localStorage.getItem('nickname') || '未知用户')
-const avatar = ref(localStorage.getItem('avatar') || '#FF6B6B')
-const loginType = ref(localStorage.getItem('loginType') || 'anonymous')
-const signature = ref(localStorage.getItem('signature') || '')
+const nickname = ref('未知用户')
+const avatar = ref('#FF6B6B')
+const loginType = ref('anonymous')
+const signature = ref('')
 const loading = ref(false)
-const userId = ref(localStorage.getItem('userId') || '1')
+const userId = ref('1')
 
 // 绑定账号相关
 const showBindModal = ref(false)
@@ -185,7 +187,12 @@ const handleFileUpload = async (event) => {
         // 服务器返回的头像URL
         const avatarUrl = response.data
         avatar.value = avatarUrl
-        localStorage.setItem('avatar', avatarUrl)
+        
+        // 更新全局用户状态
+        if (userState.value.userInfo) {
+          userState.value.userInfo.avatar = avatarUrl
+        }
+        
         message.success('头像上传成功')
         
         // 同时更新用户资料
@@ -222,10 +229,13 @@ const updateUserProfile = async () => {
     })
     
     if (response.success) {
-      localStorage.setItem('nickname', nickname.value)
-      localStorage.setItem('avatar', avatar.value)
-      localStorage.setItem('signature', signature.value)
-      localStorage.setItem('loginType', loginType.value)
+      // 更新全局用户状态
+      if (userState.value.userInfo) {
+        userState.value.userInfo.nickname = nickname.value
+        userState.value.userInfo.avatar = avatar.value
+        userState.value.userInfo.signature = signature.value
+        userState.value.userInfo.loginType = loginType.value
+      }
       message.success('资料更新成功')
     } else {
       message.error('更新失败：' + response.message)
@@ -242,22 +252,29 @@ const updateUserProfile = async () => {
 const getUserProfile = async () => {
   try {
     loading.value = true
-    const response = await request.get(`/User/GetProfile?userId=${userId.value}`)
     
-    if (response.success) {
-      const userData = response.data
+    // 从全局用户状态获取用户信息
+    if (userState.value.isLoggedIn && userState.value.userInfo) {
+      const userData = userState.value.userInfo
       nickname.value = userData.nickname || nickname.value
       avatar.value = userData.avatar || avatar.value
       signature.value = userData.signature || signature.value
       loginType.value = userData.loginType || loginType.value
-      
-      // 更新本地存储
-      localStorage.setItem('nickname', nickname.value)
-      localStorage.setItem('avatar', avatar.value)
-      localStorage.setItem('signature', signature.value)
-      localStorage.setItem('loginType', loginType.value)
+      userId.value = userData.id || userId.value
     } else {
-      message.error('获取资料失败：' + response.message)
+      // 如果全局状态中没有用户信息，调用API获取
+      const response = await request.get('/User/GetProfile')
+      
+      if (response.success) {
+        const userData = response.data
+        nickname.value = userData.nickname || nickname.value
+        avatar.value = userData.avatar || avatar.value
+        signature.value = userData.signature || signature.value
+        loginType.value = userData.loginType || loginType.value
+        userId.value = userData.id || userId.value
+      } else {
+        message.error('获取资料失败：' + response.message)
+      }
     }
   } catch (error) {
     console.error('获取用户资料失败:', error)
@@ -302,7 +319,12 @@ const submitBindAccount = async () => {
     if (response.success) {
       message.success('账号绑定成功')
       loginType.value = 'account'
-      localStorage.setItem('loginType', 'account')
+      
+      // 更新全局用户状态
+      if (userState.value.userInfo) {
+        userState.value.userInfo.loginType = 'account'
+      }
+      
       showBindModal.value = false
       phone.value = ''
       password.value = ''

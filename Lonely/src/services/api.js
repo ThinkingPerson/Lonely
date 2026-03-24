@@ -89,8 +89,17 @@ export const statsApi = {
   }
 }
 
+// 用户相关API
+export const userApi = {
+  // 获取用户个人资料
+  getProfile: () => {
+    return request.get('/User/GetProfile')
+  }
+}
+
 export default {
   postApi,
   checkInApi,
-  statsApi
+  statsApi,
+  userApi
 }
